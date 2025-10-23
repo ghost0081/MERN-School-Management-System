@@ -24,6 +24,10 @@ const {
     removeStudentAttendance } = require('../controllers/student_controller.js');
 const { subjectCreate, classSubjects, deleteSubjectsByClass, getSubjectDetail, deleteSubject, freeSubjectList, allSubjects, deleteSubjects } = require('../controllers/subject-controller.js');
 const { teacherRegister, teacherLogIn, getTeachers, getTeacherDetail, deleteTeachers, deleteTeachersByClass, deleteTeacher, updateTeacherSubject, teacherAttendance } = require('../controllers/teacher-controller.js');
+const { createAssignment, listAssignments, submitAssignment, reviewAssignment, setAssignmentStatus } = require('../controllers/assignment-controller.js');
+const { createLeave, listTeacherLeaves, listSchoolLeaves, setLeaveStatus } = require('../controllers/leave-controller.js');
+const { upsertClassDay, getClassTimetable, getTeacherTimetable } = require('../controllers/timetable-controller.js');
+const { parentLogIn, upsertParentForStudent, upsertParent, listParents, parentDetail } = require('../controllers/parent-controller.js');
 
 // Admin
 router.post('/AdminReg', adminRegister);
@@ -115,5 +119,30 @@ router.get("/Subject/:id", getSubjectDetail)
 router.delete("/Subject/:id", deleteSubject)
 router.delete("/Subjects/:id", deleteSubjects)
 router.delete("/SubjectsClass/:id", deleteSubjectsByClass)
+
+// Assignment
+
+router.post('/AssignmentCreate', createAssignment); // teacher creates
+router.get('/AssignmentList/:scope/:id', listAssignments); // list by scope
+router.put('/AssignmentSubmit', submitAssignment); // student submits
+router.put('/AssignmentReview', reviewAssignment); // teacher reviews
+router.put('/AssignmentSetStatus', setAssignmentStatus); // teacher set status per student
+
+// Leave
+router.post('/LeaveCreate', createLeave);
+router.get('/LeaveList/teacher/:id', listTeacherLeaves);
+router.get('/LeaveList/school/:id', listSchoolLeaves);
+router.put('/LeaveStatus/:id', setLeaveStatus);
+
+// Timetable
+router.post('/TimetableUpsert', upsertClassDay); // admin
+router.get('/TimetableClass/:id', getClassTimetable);
+router.get('/TimetableTeacher/:id', getTeacherTimetable);
+
+// Parent
+router.post('/ParentLogin', parentLogIn);
+router.post('/ParentUpsert', upsertParent);
+router.get('/Parents/:id', listParents); // by school
+router.get('/Parent/:id', parentDetail);
 
 module.exports = router;

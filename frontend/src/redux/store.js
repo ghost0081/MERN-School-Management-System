@@ -5,6 +5,10 @@ import { noticeReducer } from './noticeRelated/noticeSlice';
 import { sclassReducer } from './sclassRelated/sclassSlice';
 import { teacherReducer } from './teacherRelated/teacherSlice';
 import { complainReducer } from './complainRelated/complainSlice';
+import { assignmentReducer } from './assignmentRelated/assignmentSlice';
+import { leaveReducer } from './leaveRelated/leaveSlice';
+import { timetableReducer } from './timetableRelated/timetableSlice';
+import { parentReducer } from './parentRelated/parentSlice';
 
 const store = configureStore({
     reducer: {
@@ -13,7 +17,11 @@ const store = configureStore({
         teacher: teacherReducer,
         notice: noticeReducer,
         complain: complainReducer,
-        sclass: sclassReducer
+        sclass: sclassReducer,
+        assignment: assignmentReducer,
+        leave: leaveReducer,
+        timetable: timetableReducer,
+        parent: parentReducer
     },
 });
 

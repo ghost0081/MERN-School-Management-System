@@ -11,6 +11,9 @@ import ClassOutlinedIcon from '@mui/icons-material/ClassOutlined';
 import SupervisorAccountOutlinedIcon from '@mui/icons-material/SupervisorAccountOutlined';
 import ReportIcon from '@mui/icons-material/Report';
 import AssignmentIcon from '@mui/icons-material/Assignment';
+import EventBusyIcon from '@mui/icons-material/EventBusy';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import FamilyRestroomIcon from '@mui/icons-material/FamilyRestroom';
 
 const SideBar = () => {
     const location = useLocation();
@@ -58,6 +61,24 @@ const SideBar = () => {
                         <ReportIcon color={location.pathname.startsWith("/Admin/complains") ? 'primary' : 'inherit'} />
                     </ListItemIcon>
                     <ListItemText primary="Complains" />
+                </ListItemButton>
+                <ListItemButton component={Link} to="/Admin/timetable">
+                    <ListItemIcon>
+                        <AccessTimeIcon color={location.pathname.startsWith("/Admin/timetable") ? 'primary' : 'inherit'} />
+                    </ListItemIcon>
+                    <ListItemText primary="Timetable" />
+                </ListItemButton>
+                <ListItemButton component={Link} to="/Admin/teacher-leave">
+                    <ListItemIcon>
+                        <EventBusyIcon color={location.pathname.startsWith("/Admin/teacher-leave") ? 'primary' : 'inherit'} />
+                    </ListItemIcon>
+                    <ListItemText primary="Teacher Leave" />
+                </ListItemButton>
+                <ListItemButton component={Link} to="/Admin/parents">
+                    <ListItemIcon>
+                        <FamilyRestroomIcon color={location.pathname.startsWith("/Admin/parents") ? 'primary' : 'inherit'} />
+                    </ListItemIcon>
+                    <ListItemText primary="Parents" />
                 </ListItemButton>
             </React.Fragment>
             <Divider sx={{ my: 1 }} />

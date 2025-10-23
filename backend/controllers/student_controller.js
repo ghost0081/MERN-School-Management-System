@@ -4,6 +4,7 @@ const Subject = require('../models/subjectSchema.js');
 
 const studentRegister = async (req, res) => {
     try {
+        console.log('Student registration request:', req.body);
         const salt = await bcrypt.genSalt(10);
         const hashedPass = await bcrypt.hash(req.body.password, salt);
 
@@ -24,11 +25,13 @@ const studentRegister = async (req, res) => {
             });
 
             let result = await student.save();
+            console.log('Student created:', result);
 
             result.password = undefined;
             res.send(result);
         }
     } catch (err) {
+        console.error('Error creating student:', err);
         res.status(500).json(err);
     }
 };
@@ -130,7 +133,7 @@ const updateStudent = async (req, res) => {
     try {
         if (req.body.password) {
             const salt = await bcrypt.genSalt(10)
-            res.body.password = await bcrypt.hash(res.body.password, salt)
+            req.body.password = await bcrypt.hash(req.body.password, salt)
         }
         let result = await Student.findByIdAndUpdate(req.params.id,
             { $set: req.body },
@@ -139,7 +142,7 @@ const updateStudent = async (req, res) => {
         result.password = undefined;
         res.send(result)
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json(err);
     }
 }
 
@@ -166,7 +169,7 @@ const updateExamResult = async (req, res) => {
         const result = await student.save();
         return res.send(result);
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json(err);
     }
 };
 
@@ -206,7 +209,7 @@ const studentAttendance = async (req, res) => {
         const result = await student.save();
         return res.send(result);
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json(err);
     }
 };
 
@@ -220,7 +223,7 @@ const clearAllStudentsAttendanceBySubject = async (req, res) => {
         );
         return res.send(result);
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json(err);
     }
 };
 
@@ -235,7 +238,7 @@ const clearAllStudentsAttendance = async (req, res) => {
 
         return res.send(result);
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json(err);
     }
 };
 
@@ -251,7 +254,7 @@ const removeStudentAttendanceBySubject = async (req, res) => {
 
         return res.send(result);
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json(err);
     }
 };
 
@@ -267,7 +270,7 @@ const removeStudentAttendance = async (req, res) => {
 
         return res.send(result);
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json(err);
     }
 };
 

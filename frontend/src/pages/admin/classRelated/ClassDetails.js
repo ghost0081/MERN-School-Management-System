@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from 'react-router-dom'
 import { getClassDetails, getClassStudents, getSubjectList } from "../../../redux/sclassRelated/sclassHandle";
+import { getAllTeachers } from "../../../redux/teacherRelated/teacherHandle";
 import { deleteUser } from '../../../redux/userRelated/userHandle';
 import {
     Box, Container, Typography, Tab, IconButton
@@ -18,12 +19,15 @@ import SpeedDialTemplate from "../../../components/SpeedDialTemplate";
 import Popup from "../../../components/Popup";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PostAddIcon from '@mui/icons-material/PostAdd';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 
 const ClassDetails = () => {
     const params = useParams()
     const navigate = useNavigate()
     const dispatch = useDispatch();
     const { subjectsList, sclassStudents, sclassDetails, loading, error, response, getresponse } = useSelector((state) => state.sclass);
+    const { teachersList } = useSelector((state) => state.teacher);
+    const { currentUser } = useSelector((state) => state.user);
 
     const classID = params.id
 
@@ -31,7 +35,8 @@ const ClassDetails = () => {
         dispatch(getClassDetails(classID, "Sclass"));
         dispatch(getSubjectList(classID, "ClassSubjects"))
         dispatch(getClassStudents(classID));
-    }, [dispatch, classID])
+        if (currentUser?._id) dispatch(getAllTeachers(currentUser._id));
+    }, [dispatch, classID, currentUser])
 
     if (error) {
         console.log(error)
@@ -98,6 +103,10 @@ const ClassDetails = () => {
         {
             icon: <DeleteIcon color="error" />, name: 'Delete All Subjects',
             action: () => deleteHandler(classID, "SubjectsClass")
+        },
+        {
+            icon: <AccessTimeIcon color="primary" />, name: 'Manage Timetable',
+            action: () => navigate(`/Admin/timetable/${classID}`)
         }
     ];
 
@@ -203,10 +212,25 @@ const ClassDetails = () => {
         )
     }
 
+    const teacherColumns = [
+        { id: 'name', label: 'Teacher Name', minWidth: 170 },
+        { id: 'subject', label: 'Subject', minWidth: 120 },
+    ];
+
+    const classTeachers = (teachersList || []).filter(t => (t.teachSclass && (t.teachSclass._id || t.teachSclass) === classID));
+    const teacherRows = classTeachers.map(t => ({
+        name: t.name,
+        subject: t.teachSubject?.subName || '-',
+        id: t._id,
+    }));
+
     const ClassTeachersSection = () => {
         return (
             <>
-                Teachers
+                <Typography variant="h5" gutterBottom>
+                    Teachers
+                </Typography>
+                <TableTemplate columns={teacherColumns} rows={teacherRows} />
             </>
         )
     }

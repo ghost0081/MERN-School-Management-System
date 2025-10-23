@@ -130,8 +130,8 @@ const deleteTeachers = async (req, res) => {
         const deletedTeachers = await Teacher.find({ school: req.params.id });
 
         await Subject.updateMany(
-            { teacher: { $in: deletedTeachers.map(teacher => teacher._id) }, teacher: { $exists: true } },
-            { $unset: { teacher: "" }, $unset: { teacher: null } }
+            { teacher: { $in: deletedTeachers.map(teacher => teacher._id) } },
+            { $unset: { teacher: 1 } }
         );
 
         res.send(deletionResult);
@@ -154,8 +154,8 @@ const deleteTeachersByClass = async (req, res) => {
         const deletedTeachers = await Teacher.find({ sclassName: req.params.id });
 
         await Subject.updateMany(
-            { teacher: { $in: deletedTeachers.map(teacher => teacher._id) }, teacher: { $exists: true } },
-            { $unset: { teacher: "" }, $unset: { teacher: null } }
+            { teacher: { $in: deletedTeachers.map(teacher => teacher._id) } },
+            { $unset: { teacher: 1 } }
         );
 
         res.send(deletionResult);
@@ -165,7 +165,7 @@ const deleteTeachersByClass = async (req, res) => {
 };
 
 const teacherAttendance = async (req, res) => {
-    const { status, date } = req.body;
+    const { presentCount, absentCount, date } = req.body;
 
     try {
         const teacher = await Teacher.findById(req.params.id);
@@ -180,9 +180,10 @@ const teacherAttendance = async (req, res) => {
         );
 
         if (existingAttendance) {
-            existingAttendance.status = status;
+            existingAttendance.presentCount = presentCount;
+            existingAttendance.absentCount = absentCount;
         } else {
-            teacher.attendance.push({ date, status });
+            teacher.attendance.push({ date, presentCount, absentCount });
         }
 
         const result = await teacher.save();

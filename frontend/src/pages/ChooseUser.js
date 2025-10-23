@@ -8,7 +8,7 @@ import {
   CircularProgress,
   Backdrop,
 } from '@mui/material';
-import { AccountCircle, School, Group } from '@mui/icons-material';
+import { AccountCircle, School, Group, FamilyRestroom } from '@mui/icons-material';
 import styled from 'styled-components';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../redux/userRelated/userHandle';
@@ -61,6 +61,9 @@ const ChooseUser = ({ visitor }) => {
       else {
         navigate('/Teacherlogin');
       }
+    }
+    else if (user === "Parent") {
+      navigate('/Parentlogin');
     }
   }
 
@@ -122,6 +125,19 @@ const ChooseUser = ({ visitor }) => {
                   Teacher
                 </StyledTypography>
                 Login as a teacher to create courses, assignments, and track student progress.
+              </div>
+            </StyledPaper>
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <StyledPaper elevation={3}>
+              <div onClick={() => navigateHandler("Parent")}>
+                <Box mb={2}>
+                  <FamilyRestroom fontSize="large" />
+                </Box>
+                <StyledTypography>
+                  Parent
+                </StyledTypography>
+                Login as a parent to view your child's attendance and assignments.
               </div>
             </StyledPaper>
           </Grid>

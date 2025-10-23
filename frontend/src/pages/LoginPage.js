@@ -47,6 +47,18 @@ const LoginPage = ({ role }) => {
             const fields = { rollNum, studentName, password }
             setLoader(true)
             dispatch(loginUser(fields, role))
+        } else if (role === 'Parent') {
+            const rollNum = event.target.rollNumber.value;
+            const password = event.target.password.value;
+
+            if (!rollNum || !password) {
+                if (!rollNum) setRollNumberError(true);
+                if (!password) setPasswordError(true);
+                return;
+            }
+            const fields = { rollNum, password }
+            setLoader(true)
+            dispatch(loginUser(fields, role))
         }
 
         else {
@@ -142,7 +154,7 @@ const LoginPage = ({ role }) => {
                             Welcome back! Please enter your details
                         </Typography>
                         <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 2 }}>
-                            {role === "Student" ? (
+                            {role === "Student" || role === 'Parent' ? (
                                 <>
                                     <TextField
                                         margin="normal"
@@ -158,7 +170,7 @@ const LoginPage = ({ role }) => {
                                         helperText={rollNumberError && 'Roll Number is required'}
                                         onChange={handleInputChange}
                                     />
-                                    <TextField
+                                    {role === 'Student' && (<TextField
                                         margin="normal"
                                         required
                                         fullWidth
@@ -170,7 +182,7 @@ const LoginPage = ({ role }) => {
                                         error={studentNameError}
                                         helperText={studentNameError && 'Name is required'}
                                         onChange={handleInputChange}
-                                    />
+                                    />)}
                                 </>
                             ) : (
                                 <TextField

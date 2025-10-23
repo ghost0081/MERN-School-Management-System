@@ -30,12 +30,16 @@ import ShowNotices from './noticeRelated/ShowNotices';
 import ShowSubjects from './subjectRelated/ShowSubjects';
 import SubjectForm from './subjectRelated/SubjectForm';
 import ViewSubject from './subjectRelated/ViewSubject';
+import AdminTimetable from './timetable/AdminTimetable';
+import AdminTimetableHome from './timetable/AdminTimetableHome';
 
 import AddTeacher from './teacherRelated/AddTeacher';
 import ChooseClass from './teacherRelated/ChooseClass';
 import ChooseSubject from './teacherRelated/ChooseSubject';
 import ShowTeachers from './teacherRelated/ShowTeachers';
 import TeacherDetails from './teacherRelated/TeacherDetails';
+import TeacherLeavePage from './TeacherLeavePage';
+import ShowParents from './parentRelated/ShowParents';
 
 import AddClass from './classRelated/AddClass';
 import ClassDetails from './classRelated/ClassDetails';
@@ -117,6 +121,8 @@ const AdminDashboard = () => {
                         <Route path="/Admin/addclass" element={<AddClass />} />
                         <Route path="/Admin/classes" element={<ShowClasses />} />
                         <Route path="/Admin/classes/class/:id" element={<ClassDetails />} />
+                        <Route path="/Admin/timetable" element={<AdminTimetableHome />} />
+                        <Route path="/Admin/timetable/:id" element={<AdminTimetable />} />
                         <Route path="/Admin/class/addstudents/:id" element={<AddStudent situation="Class" />} />
 
                         {/* Student */}
@@ -133,6 +139,9 @@ const AdminDashboard = () => {
                         <Route path="/Admin/teachers/choosesubject/:id" element={<ChooseSubject situation="Norm" />} />
                         <Route path="/Admin/teachers/choosesubject/:classID/:teacherID" element={<ChooseSubject situation="Teacher" />} />
                         <Route path="/Admin/teachers/addteacher/:id" element={<AddTeacher />} />
+
+                        <Route path="/Admin/teacher-leave" element={<TeacherLeavePage />} />
+                        <Route path="/Admin/parents" element={<ShowParents />} />
 
                         <Route path="/logout" element={<Logout />} />
                     </Routes>

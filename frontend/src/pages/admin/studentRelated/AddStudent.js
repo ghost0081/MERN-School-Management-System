@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { registerUser } from '../../../redux/userRelated/userHandle';
+import { upsertParent } from '../../../redux/parentRelated/parentHandle';
 import Popup from '../../../components/Popup';
 import { underControl } from '../../../redux/userRelated/userSlice';
 import { getAllSclasses } from '../../../redux/sclassRelated/sclassHandle';
 import { CircularProgress } from '@mui/material';
+import axios from 'axios';
 
 const AddStudent = ({ situation }) => {
     const dispatch = useDispatch()
@@ -21,6 +23,10 @@ const AddStudent = ({ situation }) => {
     const [password, setPassword] = useState('')
     const [className, setClassName] = useState('')
     const [sclassName, setSclassName] = useState('')
+    
+    // Parent fields
+    const [parentName, setParentName] = useState('');
+    const [parentMobile, setParentMobile] = useState('');
 
     const adminID = currentUser._id
     const role = "Student"
@@ -55,24 +61,50 @@ const AddStudent = ({ situation }) => {
 
     const fields = { name, rollNum, password, sclassName, adminID, role, attendance }
 
-    const submitHandler = (event) => {
+    const submitHandler = async (event) => {
         event.preventDefault()
         if (sclassName === "") {
             setMessage("Please select a classname")
             setShowPopup(true)
         }
+        else if (!parentName || !parentMobile) {
+            setMessage("Please fill in parent details")
+            setShowPopup(true)
+        }
         else {
             setLoader(true)
-            dispatch(registerUser(fields, role))
+            try {
+                // First register the student
+                const studentResult = await axios.post(`${process.env.REACT_APP_BASE_URL}/StudentReg`, fields, {
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                
+                if (studentResult.data._id) {
+                    // Student created successfully, now create parent
+                    const parentFields = {
+                        name: parentName,
+                        mobile: parentMobile,
+                        student: studentResult.data._id,
+                        school: adminID
+                    };
+                    await dispatch(upsertParent(parentFields));
+                    dispatch(underControl())
+                    navigate(-1)
+                } else {
+                    setMessage(studentResult.data.message || "Error creating student")
+                    setShowPopup(true)
+                    setLoader(false)
+                }
+            } catch (error) {
+                setMessage("Error creating student and parent record")
+                setShowPopup(true)
+                setLoader(false)
+            }
         }
     }
 
     useEffect(() => {
-        if (status === 'added') {
-            dispatch(underControl())
-            navigate(-1)
-        }
-        else if (status === 'failed') {
+        if (status === 'failed') {
             setMessage(response)
             setShowPopup(true)
             setLoader(false)
@@ -82,7 +114,7 @@ const AddStudent = ({ situation }) => {
             setShowPopup(true)
             setLoader(false)
         }
-    }, [status, navigate, error, response, dispatch]);
+    }, [status, error, response, dispatch]);
 
     return (
         <>
@@ -124,6 +156,25 @@ const AddStudent = ({ situation }) => {
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
                         autoComplete="new-password" required />
+
+                    <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+                        <h3 style={{ margin: '0 0 15px 0', color: '#333' }}>Parent Details</h3>
+                        
+                        <label>Parent Name</label>
+                        <input className="registerInput" type="text" placeholder="Enter parent's name..."
+                            value={parentName}
+                            onChange={(event) => setParentName(event.target.value)}
+                            required />
+
+                        <label>Parent Mobile Number</label>
+                        <input className="registerInput" type="tel" placeholder="Enter parent's mobile number..."
+                            value={parentMobile}
+                            onChange={(event) => setParentMobile(event.target.value)}
+                            required />
+                        <small style={{ color: '#666', fontSize: '12px' }}>
+                            Password for parent login will be the last 5 digits of this mobile number
+                        </small>
+                    </div>
 
                     <button className="registerButton" type="submit" disabled={loader}>
                         {loader ? (

@@ -20,9 +20,11 @@ const TableTemplate = ({ buttonHaver: ButtonHaver, columns, rows }) => {
                                     {column.label}
                                 </StyledTableCell>
                             ))}
-                            <StyledTableCell align="center">
-                                Actions
-                            </StyledTableCell>
+                            {ButtonHaver && (
+                                <StyledTableCell align="center">
+                                    Actions
+                                </StyledTableCell>
+                            )}
                         </StyledTableRow>
                     </TableHead>
                     <TableBody>
@@ -43,9 +45,11 @@ const TableTemplate = ({ buttonHaver: ButtonHaver, columns, rows }) => {
                                                 </StyledTableCell>
                                             );
                                         })}
-                                        <StyledTableCell align="center">
-                                            <ButtonHaver row={row} />
-                                        </StyledTableCell>
+                                        {ButtonHaver && (
+                                            <StyledTableCell align="center">
+                                                <ButtonHaver row={row} />
+                                            </StyledTableCell>
+                                        )}
                                     </StyledTableRow>
                                 );
                             })}
