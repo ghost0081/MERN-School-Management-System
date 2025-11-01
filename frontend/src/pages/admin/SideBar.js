@@ -14,6 +14,7 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import FamilyRestroomIcon from '@mui/icons-material/FamilyRestroom';
+import GroupsIcon from '@mui/icons-material/Groups';
 
 const SideBar = () => {
     const location = useLocation();
@@ -79,6 +80,12 @@ const SideBar = () => {
                         <FamilyRestroomIcon color={location.pathname.startsWith("/Admin/parents") ? 'primary' : 'inherit'} />
                     </ListItemIcon>
                     <ListItemText primary="Parents" />
+                </ListItemButton>
+                <ListItemButton component={Link} to="/Admin/staff">
+                    <ListItemIcon>
+                        <GroupsIcon color={location.pathname.startsWith("/Admin/staff") ? 'primary' : 'inherit'} />
+                    </ListItemIcon>
+                    <ListItemText primary="Staff" />
                 </ListItemButton>
             </React.Fragment>
             <Divider sx={{ my: 1 }} />

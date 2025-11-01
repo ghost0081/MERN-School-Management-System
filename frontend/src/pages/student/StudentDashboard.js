@@ -21,7 +21,7 @@ import StudentAssignments from './StudentAssignments';
 import StudentTimetable from './StudentTimetable';
 import Logout from '../Logout'
 import AccountMenu from '../../components/AccountMenu';
-import { AppBar, Drawer } from '../../components/styles';
+import { AppBar, Drawer, drawerWidth } from '../../components/styles';
 
 const StudentDashboard = () => {
     const [open, setOpen] = useState(true);
@@ -70,7 +70,17 @@ const StudentDashboard = () => {
                         <StudentSideBar />
                     </List>
                 </Drawer>
-                <Box component="main" sx={styles.boxStyled}>
+                <Box component="main" sx={(theme) => ({
+                    ...styles.boxStyled,
+                    width: open ? `calc(100% - ${drawerWidth}px)` : `calc(100% - ${theme.spacing(7)})`,
+                    transition: theme.transitions.create(['width'], {
+                        easing: theme.transitions.easing.sharp,
+                        duration: theme.transitions.duration.enteringScreen,
+                    }),
+                    [theme.breakpoints.up('sm')]: {
+                        width: open ? `calc(100% - ${drawerWidth}px)` : `calc(100% - ${theme.spacing(9)})`,
+                    },
+                })}>
                     <Toolbar />
                     <Routes>
                         <Route path="/" element={<StudentHomePage />} />
@@ -102,7 +112,26 @@ const styles = {
                 : theme.palette.grey[900],
         flexGrow: 1,
         height: '100vh',
-        overflow: 'auto',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        // Custom scrollbar for main content
+        '&::-webkit-scrollbar': {
+            width: '12px',
+        },
+        '&::-webkit-scrollbar-track': {
+            background: (theme) => theme.palette.mode === 'light' ? '#f1f1f1' : '#2a2a2a',
+            borderRadius: '10px',
+        },
+        '&::-webkit-scrollbar-thumb': {
+            background: (theme) => theme.palette.mode === 'light' ? '#888' : '#555',
+            borderRadius: '10px',
+            '&:hover': {
+                background: (theme) => theme.palette.mode === 'light' ? '#555' : '#777',
+            },
+        },
+        // Firefox scrollbar
+        scrollbarWidth: 'thin',
+        scrollbarColor: (theme) => theme.palette.mode === 'light' ? '#888 #f1f1f1' : '#555 #2a2a2a',
     },
     toolBarStyled: {
         display: 'flex',

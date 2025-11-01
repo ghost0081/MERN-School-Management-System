@@ -11,7 +11,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { AppBar, Drawer } from '../../components/styles';
+import { AppBar, Drawer, drawerWidth } from '../../components/styles';
 import Logout from '../Logout';
 import SideBar from './SideBar';
 import AdminProfile from './AdminProfile';
@@ -40,6 +40,9 @@ import ShowTeachers from './teacherRelated/ShowTeachers';
 import TeacherDetails from './teacherRelated/TeacherDetails';
 import TeacherLeavePage from './TeacherLeavePage';
 import ShowParents from './parentRelated/ShowParents';
+import ShowStaff from './staffRelated/ShowStaff';
+import AddStaff from './staffRelated/AddStaff';
+import StaffDetails from './staffRelated/StaffDetails';
 
 import AddClass from './classRelated/AddClass';
 import ClassDetails from './classRelated/ClassDetails';
@@ -93,7 +96,17 @@ const AdminDashboard = () => {
                         <SideBar />
                     </List>
                 </Drawer>
-                <Box component="main" sx={styles.boxStyled}>
+                <Box component="main" sx={(theme) => ({
+                    ...styles.boxStyled,
+                    width: open ? `calc(100% - ${drawerWidth}px)` : `calc(100% - ${theme.spacing(7)})`,
+                    transition: theme.transitions.create(['width'], {
+                        easing: theme.transitions.easing.sharp,
+                        duration: theme.transitions.duration.enteringScreen,
+                    }),
+                    [theme.breakpoints.up('sm')]: {
+                        width: open ? `calc(100% - ${drawerWidth}px)` : `calc(100% - ${theme.spacing(9)})`,
+                    },
+                })}>
                     <Toolbar />
                     <Routes>
                         <Route path="/" element={<AdminHomePage />} />
@@ -142,6 +155,11 @@ const AdminDashboard = () => {
 
                         <Route path="/Admin/teacher-leave" element={<TeacherLeavePage />} />
                         <Route path="/Admin/parents" element={<ShowParents />} />
+                        
+                        {/* Staff */}
+                        <Route path="/Admin/staff" element={<ShowStaff />} />
+                        <Route path="/Admin/addstaff" element={<AddStaff />} />
+                        <Route path="/Admin/staff/:id" element={<StaffDetails />} />
 
                         <Route path="/logout" element={<Logout />} />
                     </Routes>
@@ -161,7 +179,26 @@ const styles = {
                 : theme.palette.grey[900],
         flexGrow: 1,
         height: '100vh',
-        overflow: 'auto',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        // Custom scrollbar for main content
+        '&::-webkit-scrollbar': {
+            width: '12px',
+        },
+        '&::-webkit-scrollbar-track': {
+            background: (theme) => theme.palette.mode === 'light' ? '#f1f1f1' : '#2a2a2a',
+            borderRadius: '10px',
+        },
+        '&::-webkit-scrollbar-thumb': {
+            background: (theme) => theme.palette.mode === 'light' ? '#888' : '#555',
+            borderRadius: '10px',
+            '&:hover': {
+                background: (theme) => theme.palette.mode === 'light' ? '#555' : '#777',
+            },
+        },
+        // Firefox scrollbar
+        scrollbarWidth: 'thin',
+        scrollbarColor: (theme) => theme.palette.mode === 'light' ? '#888 #f1f1f1' : '#555 #2a2a2a',
     },
     toolBarStyled: {
         display: 'flex',

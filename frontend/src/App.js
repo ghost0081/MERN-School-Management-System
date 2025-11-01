@@ -7,6 +7,7 @@ import StudentDashboard from './pages/student/StudentDashboard';
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import LoginPage from './pages/LoginPage';
 import ParentDashboard from './pages/ParentDashboard';
+import StaffDashboard from './pages/StaffDashboard';
 import AdminRegisterPage from './pages/admin/AdminRegisterPage';
 import ChooseUser from './pages/ChooseUser';
 
@@ -25,6 +26,7 @@ const App = () => {
           <Route path="/Studentlogin" element={<LoginPage role="Student" />} />
           <Route path="/Teacherlogin" element={<LoginPage role="Teacher" />} />
           <Route path="/Parentlogin" element={<LoginPage role="Parent" />} />
+          <Route path="/Stafflogin" element={<LoginPage role="Staff" />} />
 
           <Route path="/Adminregister" element={<AdminRegisterPage />} />
 
@@ -52,6 +54,12 @@ const App = () => {
       {currentRole === "Parent" &&
         <>
           <ParentDashboard />
+        </>
+      }
+
+      {currentRole === "Staff" &&
+        <>
+          <StaffDashboard />
         </>
       }
     </Router>

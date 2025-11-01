@@ -5,14 +5,14 @@ import MenuIcon from '@mui/icons-material/Menu';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import AccountMenu from '../components/AccountMenu';
 import { AppBar, Drawer, drawerWidth } from '../components/styles';
-import ParentSideBar from './parent/ParentSideBar';
+import StaffSideBar from './staff/StaffSideBar';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import Logout from './Logout';
-import ParentHomePage from './parent/ParentHomePage';
-import ParentAssignments from './parent/ParentAssignments';
-import ParentAttendance from './parent/ParentAttendance';
+import StaffHomePage from './staff/StaffHomePage';
+import StaffProfile from './staff/StaffProfile';
+import StaffAttendance from './staff/StaffAttendance';
 
-const ParentDashboard = () => {
+const StaffDashboard = () => {
   const [open, setOpen] = useState(true);
   const toggleDrawer = () => setOpen(!open);
 
@@ -25,7 +25,7 @@ const ParentDashboard = () => {
             <MenuIcon />
           </IconButton>
           <Typography component="h1" variant="h6" color="inherit" noWrap sx={{ flexGrow: 1 }}>
-            Parent Dashboard
+            Staff Dashboard
           </Typography>
           <AccountMenu />
         </Toolbar>
@@ -35,7 +35,7 @@ const ParentDashboard = () => {
           <IconButton onClick={toggleDrawer}><ChevronLeftIcon /></IconButton>
         </Toolbar>
         <Divider />
-        <List component="nav"><ParentSideBar /></List>
+        <List component="nav"><StaffSideBar /></List>
       </Drawer>
       <Box component="main" sx={(theme) => ({
         backgroundColor: theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[900], 
@@ -72,10 +72,10 @@ const ParentDashboard = () => {
       })}>
         <Toolbar />
         <Routes>
-          <Route path='/' element={<ParentHomePage />} />
+          <Route path='/' element={<StaffHomePage />} />
           <Route path='*' element={<Navigate to='/' />} />
-          <Route path='/Parent/attendance' element={<ParentAttendance />} />
-          <Route path='/Parent/assignments' element={<ParentAssignments />} />
+          <Route path='/Staff/profile' element={<StaffProfile />} />
+          <Route path='/Staff/attendance' element={<StaffAttendance />} />
           <Route path='/logout' element={<Logout />} />
         </Routes>
       </Box>
@@ -83,11 +83,5 @@ const ParentDashboard = () => {
   );
 };
 
-export default ParentDashboard;
-
-
-
-
-
-
+export default StaffDashboard;
 

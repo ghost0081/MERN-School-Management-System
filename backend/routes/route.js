@@ -28,6 +28,7 @@ const { createAssignment, listAssignments, submitAssignment, reviewAssignment, s
 const { createLeave, listTeacherLeaves, listSchoolLeaves, setLeaveStatus } = require('../controllers/leave-controller.js');
 const { upsertClassDay, getClassTimetable, getTeacherTimetable } = require('../controllers/timetable-controller.js');
 const { parentLogIn, upsertParentForStudent, upsertParent, listParents, parentDetail } = require('../controllers/parent-controller.js');
+const { staffRegister, staffLogIn, getStaff, getStaffDetail, updateStaff, deleteStaff, deleteAllStaff, staffAttendance } = require('../controllers/staff-controller.js');
 
 // Admin
 router.post('/AdminReg', adminRegister);
@@ -144,5 +145,15 @@ router.post('/ParentLogin', parentLogIn);
 router.post('/ParentUpsert', upsertParent);
 router.get('/Parents/:id', listParents); // by school
 router.get('/Parent/:id', parentDetail);
+
+// Staff
+router.post('/StaffReg', staffRegister);
+router.post('/StaffLogin', staffLogIn);
+router.get('/Staff/:id', getStaffDetail);
+router.get('/Staffs/:id', getStaff); // by school
+router.put('/Staff/:id', updateStaff);
+router.delete('/Staff/:id', deleteStaff);
+router.delete('/Staffs/:id', deleteAllStaff); // delete all by school
+router.put('/StaffAttendance/:id', staffAttendance);
 
 module.exports = router;

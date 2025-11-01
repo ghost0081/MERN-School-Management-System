@@ -7,7 +7,7 @@ import {
     AppBar as MuiAppBar,
 } from "@mui/material";
 
-const drawerWidth = 240
+export const drawerWidth = 240
 
 export const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
@@ -53,11 +53,36 @@ export const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 
             position: 'relative',
             whiteSpace: 'nowrap',
             width: drawerWidth,
+            height: '100vh',
+            overflowY: 'auto',
+            overflowX: 'hidden',
             transition: theme.transitions.create('width', {
                 easing: theme.transitions.easing.sharp,
                 duration: theme.transitions.duration.enteringScreen,
             }),
             boxSizing: 'border-box',
+            top: 0,
+            left: 0,
+            // Professional sidebar styling
+            backgroundColor: theme.palette.mode === 'light' ? '#ffffff' : '#1e1e1e',
+            borderRight: `1px solid ${theme.palette.mode === 'light' ? '#e0e0e0' : '#333'}`,
+            // Custom scrollbar for sidebar
+            '&::-webkit-scrollbar': {
+                width: '6px',
+            },
+            '&::-webkit-scrollbar-track': {
+                background: 'transparent',
+            },
+            '&::-webkit-scrollbar-thumb': {
+                background: theme.palette.mode === 'light' ? '#c1c1c1' : '#555',
+                borderRadius: '10px',
+                '&:hover': {
+                    background: theme.palette.mode === 'light' ? '#a8a8a8' : '#777',
+                },
+            },
+            // Firefox scrollbar
+            scrollbarWidth: 'thin',
+            scrollbarColor: theme.palette.mode === 'light' ? '#c1c1c1 transparent' : '#555 transparent',
             ...(!open && {
                 overflowX: 'hidden',
                 transition: theme.transitions.create('width', {

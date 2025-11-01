@@ -107,6 +107,12 @@ const LoginPage = ({ role }) => {
             setGuestLoader(true)
             dispatch(loginUser(fields, role))
         }
+        else if (role === "Staff") {
+            const email = "staff@example.com" // Guest staff email
+            const fields = { email, password }
+            setGuestLoader(true)
+            dispatch(loginUser(fields, role))
+        }
     }
 
     useEffect(() => {
@@ -118,6 +124,10 @@ const LoginPage = ({ role }) => {
                 navigate('/Student/dashboard');
             } else if (currentRole === 'Teacher') {
                 navigate('/Teacher/dashboard');
+            } else if (currentRole === 'Parent') {
+                navigate('/Parent/dashboard');
+            } else if (currentRole === 'Staff') {
+                navigate('/Staff/dashboard');
             }
         }
         else if (status === 'failed') {

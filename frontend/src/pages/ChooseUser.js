@@ -8,7 +8,7 @@ import {
   CircularProgress,
   Backdrop,
 } from '@mui/material';
-import { AccountCircle, School, Group, FamilyRestroom } from '@mui/icons-material';
+import { AccountCircle, School, Group, FamilyRestroom, Groups } from '@mui/icons-material';
 import styled from 'styled-components';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../redux/userRelated/userHandle';
@@ -65,6 +65,17 @@ const ChooseUser = ({ visitor }) => {
     else if (user === "Parent") {
       navigate('/Parentlogin');
     }
+    else if (user === "Staff") {
+      if (visitor === "guest") {
+        const email = "staff@example.com" // You can add a guest staff email later
+        const fields = { email, password }
+        setLoader(true)
+        dispatch(loginUser(fields, user))
+      }
+      else {
+        navigate('/Stafflogin');
+      }
+    }
   }
 
   useEffect(() => {
@@ -76,6 +87,10 @@ const ChooseUser = ({ visitor }) => {
         navigate('/Student/dashboard');
       } else if (currentRole === 'Teacher') {
         navigate('/Teacher/dashboard');
+      } else if (currentRole === 'Parent') {
+        navigate('/Parent/dashboard');
+      } else if (currentRole === 'Staff') {
+        navigate('/Staff/dashboard');
       }
     }
     else if (status === 'error') {
@@ -138,6 +153,19 @@ const ChooseUser = ({ visitor }) => {
                   Parent
                 </StyledTypography>
                 Login as a parent to view your child's attendance and assignments.
+              </div>
+            </StyledPaper>
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <StyledPaper elevation={3}>
+              <div onClick={() => navigateHandler("Staff")}>
+                <Box mb={2}>
+                  <Groups fontSize="large" />
+                </Box>
+                <StyledTypography>
+                  Staff
+                </StyledTypography>
+                Login as staff to view your details and other information.
               </div>
             </StyledPaper>
           </Grid>

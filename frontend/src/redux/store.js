@@ -9,6 +9,7 @@ import { assignmentReducer } from './assignmentRelated/assignmentSlice';
 import { leaveReducer } from './leaveRelated/leaveSlice';
 import { timetableReducer } from './timetableRelated/timetableSlice';
 import { parentReducer } from './parentRelated/parentSlice';
+import { staffReducer } from './staffRelated/staffSlice';
 
 const store = configureStore({
     reducer: {
@@ -21,7 +22,8 @@ const store = configureStore({
         assignment: assignmentReducer,
         leave: leaveReducer,
         timetable: timetableReducer,
-        parent: parentReducer
+        parent: parentReducer,
+        staff: staffReducer
     },
 });
 
