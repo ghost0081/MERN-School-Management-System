@@ -24,3 +24,6 @@ export const timetableReducer = timetableSlice.reducer;
 
 
 
+
+
+
