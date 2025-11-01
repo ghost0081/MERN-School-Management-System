@@ -5,6 +5,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import ClassOutlinedIcon from '@mui/icons-material/ClassOutlined';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 
 const StaffSideBar = () => {
     const location = useLocation();
@@ -22,6 +23,12 @@ const StaffSideBar = () => {
                         <ClassOutlinedIcon color={location.pathname.startsWith("/Staff/attendance") ? 'primary' : 'inherit'} />
                     </ListItemIcon>
                     <ListItemText primary="Attendance" />
+                </ListItemButton>
+                <ListItemButton component={Link} to="/Staff/payroll">
+                    <ListItemIcon>
+                        <AccountBalanceWalletIcon color={location.pathname.startsWith("/Staff/payroll") ? 'primary' : 'inherit'} />
+                    </ListItemIcon>
+                    <ListItemText primary="Payroll" />
                 </ListItemButton>
             </React.Fragment>
             <Divider sx={{ my: 1 }} />

@@ -1,6 +1,10 @@
 import * as React from 'react';
-import { Divider, ListItemButton, ListItemIcon, ListItemText, ListSubheader } from '@mui/material';
+import { Divider, ListItemButton, ListItemIcon, ListItemText, ListSubheader, Collapse, List } from '@mui/material';
 import { Link, useLocation } from 'react-router-dom';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 
 import HomeIcon from "@mui/icons-material/Home";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
@@ -15,9 +19,18 @@ import EventBusyIcon from '@mui/icons-material/EventBusy';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import FamilyRestroomIcon from '@mui/icons-material/FamilyRestroom';
 import GroupsIcon from '@mui/icons-material/Groups';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 
 const SideBar = () => {
     const location = useLocation();
+    const [staffOpen, setStaffOpen] = React.useState(
+        location.pathname.startsWith("/Admin/staff") || location.pathname.startsWith("/Admin/payroll")
+    );
+
+    const handleStaffClick = () => {
+        setStaffOpen(!staffOpen);
+    };
+
     return (
         <>
             <React.Fragment>
@@ -81,11 +94,42 @@ const SideBar = () => {
                     </ListItemIcon>
                     <ListItemText primary="Parents" />
                 </ListItemButton>
-                <ListItemButton component={Link} to="/Admin/staff">
+                <ListItemButton onClick={handleStaffClick}>
                     <ListItemIcon>
-                        <GroupsIcon color={location.pathname.startsWith("/Admin/staff") ? 'primary' : 'inherit'} />
+                        <GroupsIcon color={(location.pathname.startsWith("/Admin/staff") || location.pathname.startsWith("/Admin/payroll")) ? 'primary' : 'inherit'} />
                     </ListItemIcon>
                     <ListItemText primary="Staff" />
+                    {staffOpen ? <ExpandLess /> : <ExpandMore />}
+                </ListItemButton>
+                <Collapse in={staffOpen} timeout="auto" unmountOnExit>
+                    <List component="div" disablePadding>
+                        <ListItemButton 
+                            component={Link} 
+                            to="/Admin/staff" 
+                            sx={{ pl: 4 }}
+                        >
+                            <ListItemIcon>
+                                <PersonAddAlt1Icon color={location.pathname.startsWith("/Admin/staff") && !location.pathname.startsWith("/Admin/payroll") ? 'primary' : 'inherit'} />
+                            </ListItemIcon>
+                            <ListItemText primary="Add Staff" />
+                        </ListItemButton>
+                        <ListItemButton 
+                            component={Link} 
+                            to="/Admin/payroll" 
+                            sx={{ pl: 4 }}
+                        >
+                            <ListItemIcon>
+                                <AccountBalanceWalletIcon color={location.pathname.startsWith("/Admin/payroll") ? 'primary' : 'inherit'} />
+                            </ListItemIcon>
+                            <ListItemText primary="Payroll" />
+                        </ListItemButton>
+                    </List>
+                </Collapse>
+                <ListItemButton component={Link} to="/Admin/fees">
+                    <ListItemIcon>
+                        <AccountBalanceIcon color={location.pathname.startsWith("/Admin/fees") ? 'primary' : 'inherit'} />
+                    </ListItemIcon>
+                    <ListItemText primary="Fees" />
                 </ListItemButton>
             </React.Fragment>
             <Divider sx={{ my: 1 }} />

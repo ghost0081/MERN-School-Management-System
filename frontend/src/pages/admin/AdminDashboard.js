@@ -43,6 +43,10 @@ import ShowParents from './parentRelated/ShowParents';
 import ShowStaff from './staffRelated/ShowStaff';
 import AddStaff from './staffRelated/AddStaff';
 import StaffDetails from './staffRelated/StaffDetails';
+import FeesHomePage from './feesRelated/FeesHomePage';
+import ClassFeesPage from './feesRelated/ClassFeesPage';
+import PayrollHomePage from './payrollRelated/PayrollHomePage';
+import StaffPayrollPage from './payrollRelated/StaffPayrollPage';
 
 import AddClass from './classRelated/AddClass';
 import ClassDetails from './classRelated/ClassDetails';
@@ -160,6 +164,15 @@ const AdminDashboard = () => {
                         <Route path="/Admin/staff" element={<ShowStaff />} />
                         <Route path="/Admin/addstaff" element={<AddStaff />} />
                         <Route path="/Admin/staff/:id" element={<StaffDetails />} />
+
+                        {/* Fees */}
+                        <Route path="/Admin/fees" element={<FeesHomePage />} />
+                        <Route path="/Admin/fees/class/:id" element={<ClassFeesPage />} />
+
+                        {/* Payroll */}
+                        <Route path="/Admin/payroll" element={<PayrollHomePage />} />
+                        <Route path="/Admin/payroll/staff/:id" element={<StaffPayrollPage />} />
+                        <Route path="/Admin/payroll/teacher/:id" element={<StaffPayrollPage />} />
 
                         <Route path="/logout" element={<Logout />} />
                     </Routes>

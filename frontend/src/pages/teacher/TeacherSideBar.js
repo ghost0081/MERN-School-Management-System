@@ -10,6 +10,7 @@ import ClassOutlinedIcon from '@mui/icons-material/ClassOutlined';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import { useSelector } from 'react-redux';
 
 const TeacherSideBar = () => {
@@ -55,6 +56,12 @@ const TeacherSideBar = () => {
                         <AccessTimeIcon color={location.pathname.startsWith("/Teacher/timetable") ? 'primary' : 'inherit'} />
                     </ListItemIcon>
                     <ListItemText primary="Timetable" />
+                </ListItemButton>
+                <ListItemButton component={Link} to="/Teacher/payroll">
+                    <ListItemIcon>
+                        <AccountBalanceWalletIcon color={location.pathname.startsWith("/Teacher/payroll") ? 'primary' : 'inherit'} />
+                    </ListItemIcon>
+                    <ListItemText primary="Payroll" />
                 </ListItemButton>
             </React.Fragment>
             <Divider sx={{ my: 1 }} />

@@ -29,6 +29,8 @@ const { createLeave, listTeacherLeaves, listSchoolLeaves, setLeaveStatus } = req
 const { upsertClassDay, getClassTimetable, getTeacherTimetable } = require('../controllers/timetable-controller.js');
 const { parentLogIn, upsertParentForStudent, upsertParent, listParents, parentDetail } = require('../controllers/parent-controller.js');
 const { staffRegister, staffLogIn, getStaff, getStaffDetail, updateStaff, deleteStaff, deleteAllStaff, staffAttendance } = require('../controllers/staff-controller.js');
+const { getFeesByClass, updateFeeStatus, bulkRegisterFees, getStudentFeeHistory, getFeesSummary } = require('../controllers/fee-controller.js');
+const { getPayrollByStaff, getPayrollByEmployee, getPayrollBySchool, updatePayrollStatus, getStaffPayrollHistory, getEmployeePayrollHistory, getPayrollSummary } = require('../controllers/payroll-controller.js');
 
 // Admin
 router.post('/AdminReg', adminRegister);
@@ -155,5 +157,21 @@ router.put('/Staff/:id', updateStaff);
 router.delete('/Staff/:id', deleteStaff);
 router.delete('/Staffs/:id', deleteAllStaff); // delete all by school
 router.put('/StaffAttendance/:id', staffAttendance);
+
+// Fees
+router.get('/Fees/Class', getFeesByClass); // ?classId=&month=&schoolId=
+router.put('/Fees/Status', updateFeeStatus); // update/create fee
+router.post('/Fees/BulkRegister', bulkRegisterFees); // bulk register fees for class
+router.get('/Fees/Student/:studentId', getStudentFeeHistory);
+router.get('/Fees/Summary', getFeesSummary); // ?schoolId=&month=
+
+// Payroll
+router.get('/Payroll/Staff', getPayrollByStaff); // ?staffId=&month=&schoolId= (legacy)
+router.get('/Payroll/Employee', getPayrollByEmployee); // ?employeeId=&employeeType=&month=&schoolId=
+router.get('/Payroll/School', getPayrollBySchool); // ?schoolId=&month=
+router.put('/Payroll/Status', updatePayrollStatus); // update/create payroll
+router.get('/Payroll/Staff/:staffId', getStaffPayrollHistory); // legacy
+router.get('/Payroll/Employee/:employeeType/:employeeId', getEmployeePayrollHistory); // Get history by employee type and ID
+router.get('/Payroll/Summary', getPayrollSummary); // ?schoolId=&month=
 
 module.exports = router;

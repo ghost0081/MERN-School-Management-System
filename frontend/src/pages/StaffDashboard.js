@@ -11,6 +11,7 @@ import Logout from './Logout';
 import StaffHomePage from './staff/StaffHomePage';
 import StaffProfile from './staff/StaffProfile';
 import StaffAttendance from './staff/StaffAttendance';
+import StaffPayroll from './staff/StaffPayroll';
 
 const StaffDashboard = () => {
   const [open, setOpen] = useState(true);
@@ -76,6 +77,7 @@ const StaffDashboard = () => {
           <Route path='*' element={<Navigate to='/' />} />
           <Route path='/Staff/profile' element={<StaffProfile />} />
           <Route path='/Staff/attendance' element={<StaffAttendance />} />
+          <Route path='/Staff/payroll' element={<StaffPayroll />} />
           <Route path='/logout' element={<Logout />} />
         </Routes>
       </Box>

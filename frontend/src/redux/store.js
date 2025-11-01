@@ -10,6 +10,8 @@ import { leaveReducer } from './leaveRelated/leaveSlice';
 import { timetableReducer } from './timetableRelated/timetableSlice';
 import { parentReducer } from './parentRelated/parentSlice';
 import { staffReducer } from './staffRelated/staffSlice';
+import { feeReducer } from './feeRelated/feeSlice';
+import { payrollReducer } from './payrollRelated/payrollSlice';
 
 const store = configureStore({
     reducer: {
@@ -23,7 +25,9 @@ const store = configureStore({
         leave: leaveReducer,
         timetable: timetableReducer,
         parent: parentReducer,
-        staff: staffReducer
+        staff: staffReducer,
+        fee: feeReducer,
+        payroll: payrollReducer,
     },
 });
 
