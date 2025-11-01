@@ -31,6 +31,7 @@ const { parentLogIn, upsertParentForStudent, upsertParent, listParents, parentDe
 const { staffRegister, staffLogIn, getStaff, getStaffDetail, updateStaff, deleteStaff, deleteAllStaff, staffAttendance } = require('../controllers/staff-controller.js');
 const { getFeesByClass, updateFeeStatus, bulkRegisterFees, getStudentFeeHistory, getFeesSummary } = require('../controllers/fee-controller.js');
 const { getPayrollByStaff, getPayrollByEmployee, getPayrollBySchool, updatePayrollStatus, getStaffPayrollHistory, getEmployeePayrollHistory, getPayrollSummary } = require('../controllers/payroll-controller.js');
+const { getFinancialAccounting } = require('../controllers/financial-controller.js');
 
 // Admin
 router.post('/AdminReg', adminRegister);
@@ -173,5 +174,8 @@ router.put('/Payroll/Status', updatePayrollStatus); // update/create payroll
 router.get('/Payroll/Staff/:staffId', getStaffPayrollHistory); // legacy
 router.get('/Payroll/Employee/:employeeType/:employeeId', getEmployeePayrollHistory); // Get history by employee type and ID
 router.get('/Payroll/Summary', getPayrollSummary); // ?schoolId=&month=
+
+// Financial Accounting
+router.get('/Financial/Accounting', getFinancialAccounting); // ?schoolId=&year=&month=
 
 module.exports = router;

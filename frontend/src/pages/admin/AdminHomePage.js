@@ -11,26 +11,35 @@ import { useEffect } from 'react';
 import { getAllSclasses } from '../../redux/sclassRelated/sclassHandle';
 import { getAllStudents } from '../../redux/studentRelated/studentHandle';
 import { getAllTeachers } from '../../redux/teacherRelated/teacherHandle';
+import { getFinancialAccounting } from '../../redux/financialRelated/financialHandle';
+import FinancialAccounting from './financialRelated/FinancialAccounting';
 
 const AdminHomePage = () => {
     const dispatch = useDispatch();
     const { studentsList } = useSelector((state) => state.student);
     const { sclassesList } = useSelector((state) => state.sclass);
     const { teachersList } = useSelector((state) => state.teacher);
+    const { financialData } = useSelector((state) => state.financial);
 
     const { currentUser } = useSelector(state => state.user)
 
     const adminID = currentUser._id
+    const currentYear = new Date().getFullYear();
 
     useEffect(() => {
         dispatch(getAllStudents(adminID));
         dispatch(getAllSclasses(adminID, "Sclass"));
         dispatch(getAllTeachers(adminID));
-    }, [adminID, dispatch]);
+        // Fetch current year financial data for Fees Collection card
+        dispatch(getFinancialAccounting(adminID, currentYear));
+    }, [adminID, dispatch, currentYear]);
 
     const numberOfStudents = studentsList && studentsList.length;
     const numberOfClasses = sclassesList && sclassesList.length;
     const numberOfTeachers = teachersList && teachersList.length;
+    
+    // Get total revenue from fees for current year (for Fees Collection card)
+    const totalFeesRevenue = financialData?.totalRevenue || 0;
 
     return (
         <>
@@ -69,7 +78,11 @@ const AdminHomePage = () => {
                             <Title>
                                 Fees Collection
                             </Title>
-                            <Data start={0} end={23000} duration={2.5} prefix="$" />                        </StyledPaper>
+                            <Data start={0} end={totalFeesRevenue} duration={2.5} prefix="₹" />
+                        </StyledPaper>
+                    </Grid>
+                    <Grid item xs={12} md={12} lg={12}>
+                        <FinancialAccounting />
                     </Grid>
                     <Grid item xs={12} md={12} lg={12}>
                         <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column' }}>
