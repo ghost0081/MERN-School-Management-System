@@ -37,38 +37,19 @@ const upsertParentForStudent = async (req, res) => {
 const upsertParent = async (req, res) => {
     try {
         const { name, mobile, student, school } = req.body;
-        console.log('Creating parent with data:', { name, mobile, student, school });
-        console.log('School ID type:', typeof school);
-        
         const parent = await Parent.findOneAndUpdate(
             { student: student },
             { name, mobile, student, school },
             { new: true, upsert: true }
         );
-        
-        console.log('Parent created/updated:', parent);
-        
-        // Verify the parent was created correctly
-        const verifyParent = await Parent.findById(parent._id).populate('school', 'schoolName');
-        console.log('Verified parent:', verifyParent);
-        
         res.send(parent);
     } catch (error) {
-        console.error('Error creating parent:', error);
         res.status(500).json(error);
     }
 };
 
 const listParents = async (req, res) => {
     try {
-        console.log('Fetching parents for school:', req.params.id);
-        console.log('School ID type:', typeof req.params.id);
-        
-        // First check if there are any parents at all
-        const allParents = await Parent.find({});
-        console.log('Total parents in database:', allParents.length);
-        
-        // Then check for parents with this specific school ID
         const items = await Parent.find({ school: req.params.id })
             .populate('student', 'name rollNum')
             .populate({
@@ -78,11 +59,8 @@ const listParents = async (req, res) => {
                     model: 'Sclass'
                 }
             });
-        console.log('Found parents for school:', items.length);
-        console.log('Parents data:', items);
-        res.send(items); // Always send the array, even if empty
+        res.send(items);
     } catch (error) {
-        console.error('Error fetching parents:', error);
         res.status(500).json(error);
     }
 };

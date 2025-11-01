@@ -4,13 +4,9 @@ import { getRequest, getSuccess, getDetailSuccess, getFailed, getError, postDone
 export const getParents = (schoolId) => async (dispatch) => {
     dispatch(getRequest());
     try {
-        console.log('Fetching parents from API for school:', schoolId);
         const res = await axios.get(`${process.env.REACT_APP_BASE_URL}/Parents/${schoolId}`);
-        console.log('Parents API response:', res.data);
-        // Always dispatch success, even if array is empty
         dispatch(getSuccess(res.data || []));
     } catch (error) {
-        console.error('Error fetching parents:', error);
         dispatch(getError(error));
     }
 }
@@ -29,12 +25,9 @@ export const getParentDetails = (parentId) => async (dispatch) => {
 export const upsertParent = (fields) => async (dispatch) => {
     dispatch(getRequest());
     try {
-        console.log('Creating parent with fields:', fields);
-        const res = await axios.post(`${process.env.REACT_APP_BASE_URL}/ParentUpsert`, fields, { headers: { 'Content-Type': 'application/json' } });
-        console.log('Parent creation response:', res.data);
+        await axios.post(`${process.env.REACT_APP_BASE_URL}/ParentUpsert`, fields, { headers: { 'Content-Type': 'application/json' } });
         dispatch(postDone());
     } catch (error) {
-        console.error('Error creating parent:', error);
         dispatch(getError(error));
     }
 }

@@ -4,7 +4,6 @@ const Subject = require('../models/subjectSchema.js');
 
 const studentRegister = async (req, res) => {
     try {
-        console.log('Student registration request:', req.body);
         const salt = await bcrypt.genSalt(10);
         const hashedPass = await bcrypt.hash(req.body.password, salt);
 
@@ -25,13 +24,10 @@ const studentRegister = async (req, res) => {
             });
 
             let result = await student.save();
-            console.log('Student created:', result);
-
             result.password = undefined;
             res.send(result);
         }
     } catch (err) {
-        console.error('Error creating student:', err);
         res.status(500).json(err);
     }
 };
