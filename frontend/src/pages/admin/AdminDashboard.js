@@ -47,6 +47,8 @@ import FeesHomePage from './feesRelated/FeesHomePage';
 import ClassFeesPage from './feesRelated/ClassFeesPage';
 import PayrollHomePage from './payrollRelated/PayrollHomePage';
 import StaffPayrollPage from './payrollRelated/StaffPayrollPage';
+import AddStationery from './stationeryRelated/AddStationery';
+import StationeryInvoices from './stationeryRelated/StationeryInvoices';
 
 import AddClass from './classRelated/AddClass';
 import ClassDetails from './classRelated/ClassDetails';
@@ -173,6 +175,10 @@ const AdminDashboard = () => {
                         <Route path="/Admin/payroll" element={<PayrollHomePage />} />
                         <Route path="/Admin/payroll/staff/:id" element={<StaffPayrollPage />} />
                         <Route path="/Admin/payroll/teacher/:id" element={<StaffPayrollPage />} />
+
+                        {/* Stationery */}
+                        <Route path="/Admin/stationery" element={<AddStationery />} />
+                        <Route path="/Admin/invoices" element={<StationeryInvoices />} />
 
                         <Route path="/logout" element={<Logout />} />
                     </Routes>

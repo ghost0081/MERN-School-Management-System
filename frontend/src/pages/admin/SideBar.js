@@ -5,6 +5,8 @@ import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import InventoryIcon from '@mui/icons-material/Inventory';
+import ReceiptIcon from '@mui/icons-material/Receipt';
 
 import HomeIcon from "@mui/icons-material/Home";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
@@ -26,9 +28,16 @@ const SideBar = () => {
     const [staffOpen, setStaffOpen] = React.useState(
         location.pathname.startsWith("/Admin/staff") || location.pathname.startsWith("/Admin/payroll")
     );
+    const [stationeryOpen, setStationeryOpen] = React.useState(
+        location.pathname.startsWith("/Admin/stationery") || location.pathname.startsWith("/Admin/invoices")
+    );
 
     const handleStaffClick = () => {
         setStaffOpen(!staffOpen);
+    };
+
+    const handleStationeryClick = () => {
+        setStationeryOpen(!stationeryOpen);
     };
 
     return (
@@ -131,6 +140,37 @@ const SideBar = () => {
                     </ListItemIcon>
                     <ListItemText primary="Fees" />
                 </ListItemButton>
+                <ListItemButton onClick={handleStationeryClick}>
+                    <ListItemIcon>
+                        <InventoryIcon color={(location.pathname.startsWith("/Admin/stationery") || location.pathname.startsWith("/Admin/invoices")) ? 'primary' : 'inherit'} />
+                    </ListItemIcon>
+                    <ListItemText primary="Stationery" />
+                    {stationeryOpen ? <ExpandLess /> : <ExpandMore />}
+                </ListItemButton>
+                <Collapse in={stationeryOpen} timeout="auto" unmountOnExit>
+                    <List component="div" disablePadding>
+                        <ListItemButton 
+                            component={Link} 
+                            to="/Admin/stationery" 
+                            sx={{ pl: 4 }}
+                        >
+                            <ListItemIcon>
+                                <InventoryIcon color={location.pathname.startsWith("/Admin/stationery") && !location.pathname.startsWith("/Admin/invoices") ? 'primary' : 'inherit'} />
+                            </ListItemIcon>
+                            <ListItemText primary="Add Stationery" />
+                        </ListItemButton>
+                        <ListItemButton 
+                            component={Link} 
+                            to="/Admin/invoices" 
+                            sx={{ pl: 4 }}
+                        >
+                            <ListItemIcon>
+                                <ReceiptIcon color={location.pathname.startsWith("/Admin/invoices") ? 'primary' : 'inherit'} />
+                            </ListItemIcon>
+                            <ListItemText primary="Sold" />
+                        </ListItemButton>
+                    </List>
+                </Collapse>
             </React.Fragment>
             <Divider sx={{ my: 1 }} />
             <React.Fragment>

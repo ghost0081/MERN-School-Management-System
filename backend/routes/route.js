@@ -32,6 +32,7 @@ const { staffRegister, staffLogIn, getStaff, getStaffDetail, updateStaff, delete
 const { getFeesByClass, updateFeeStatus, bulkRegisterFees, getStudentFeeHistory, getFeesSummary } = require('../controllers/fee-controller.js');
 const { getPayrollByStaff, getPayrollByEmployee, getPayrollBySchool, updatePayrollStatus, getStaffPayrollHistory, getEmployeePayrollHistory, getPayrollSummary } = require('../controllers/payroll-controller.js');
 const { getFinancialAccounting } = require('../controllers/financial-controller.js');
+const { getStationery, getStationeryDetail, addStationery, updateStationery, deleteStationery, createInvoice, getInvoices, getInvoiceDetail, deleteInvoice } = require('../controllers/stationery-controller.js');
 
 // Admin
 router.post('/AdminReg', adminRegister);
@@ -177,5 +178,18 @@ router.get('/Payroll/Summary', getPayrollSummary); // ?schoolId=&month=
 
 // Financial Accounting
 router.get('/Financial/Accounting', getFinancialAccounting); // ?schoolId=&year=&month=
+
+// Stationery
+router.get('/Stationery/:schoolId', getStationery); // Get all products
+router.get('/Stationery/Product/:id', getStationeryDetail); // Get single product
+router.post('/Stationery', addStationery); // Add product
+router.put('/Stationery/:id', updateStationery); // Update product
+router.delete('/Stationery/:id', deleteStationery); // Delete product
+
+// Invoices (Sales)
+router.post('/Invoice', createInvoice); // Create invoice/sale
+router.get('/Invoices/:schoolId', getInvoices); // Get all invoices
+router.get('/Invoice/:id', getInvoiceDetail); // Get single invoice
+router.delete('/Invoice/:id', deleteInvoice); // Delete invoice (restores inventory)
 
 module.exports = router;

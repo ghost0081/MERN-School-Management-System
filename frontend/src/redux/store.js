@@ -13,6 +13,7 @@ import { staffReducer } from './staffRelated/staffSlice';
 import { feeReducer } from './feeRelated/feeSlice';
 import { payrollReducer } from './payrollRelated/payrollSlice';
 import financialReducer from './financialRelated/financialSlice';
+import stationeryReducer from './stationeryRelated/stationerySlice';
 
 const store = configureStore({
     reducer: {
@@ -30,6 +31,7 @@ const store = configureStore({
         fee: feeReducer,
         payroll: payrollReducer,
         financial: financialReducer,
+        stationery: stationeryReducer,
     },
 });
 
