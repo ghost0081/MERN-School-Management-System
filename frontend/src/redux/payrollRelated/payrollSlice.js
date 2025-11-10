@@ -72,3 +72,4 @@ const payrollSlice = createSlice({
 export const { getRequest, getSuccess, getStaffPayrollSuccess, getStaffPayrollHistorySuccess, getSummarySuccess, getFailed, getError, postDone, underControl } = payrollSlice.actions;
 export const payrollReducer = payrollSlice.reducer;
 
+

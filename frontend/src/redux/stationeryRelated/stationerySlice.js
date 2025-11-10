@@ -70,3 +70,4 @@ const stationerySlice = createSlice({
 export const { getRequest, getSuccess, getDetailSuccess, getInvoicesSuccess, getInvoiceDetailSuccess, postDone, getFailed, getError, underControl } = stationerySlice.actions;
 export default stationerySlice.reducer;
 
+

@@ -40,6 +40,7 @@ import ShowTeachers from './teacherRelated/ShowTeachers';
 import TeacherDetails from './teacherRelated/TeacherDetails';
 import TeacherLeavePage from './TeacherLeavePage';
 import ShowParents from './parentRelated/ShowParents';
+import ClassParentsPage from './parentRelated/ClassParentsPage';
 import ShowStaff from './staffRelated/ShowStaff';
 import AddStaff from './staffRelated/AddStaff';
 import StaffDetails from './staffRelated/StaffDetails';
@@ -161,6 +162,7 @@ const AdminDashboard = () => {
 
                         <Route path="/Admin/teacher-leave" element={<TeacherLeavePage />} />
                         <Route path="/Admin/parents" element={<ShowParents />} />
+                        <Route path="/Admin/parents/class/:id" element={<ClassParentsPage />} />
                         
                         {/* Staff */}
                         <Route path="/Admin/staff" element={<ShowStaff />} />

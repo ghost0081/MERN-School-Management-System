@@ -6,6 +6,7 @@ import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import ClassOutlinedIcon from '@mui/icons-material/ClassOutlined';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 
 const ParentSideBar = () => {
     const location = useLocation();
@@ -35,6 +36,12 @@ const ParentSideBar = () => {
                         <AccountBalanceIcon color={location.pathname.startsWith("/Parent/fees") ? 'primary' : 'inherit'} />
                     </ListItemIcon>
                     <ListItemText primary="Fees" />
+                </ListItemButton>
+                <ListItemButton component={Link} to="/Parent/shop">
+                    <ListItemIcon>
+                        <ShoppingCartIcon color={location.pathname.startsWith("/Parent/shop") ? 'primary' : 'inherit'} />
+                    </ListItemIcon>
+                    <ListItemText primary="Shop" />
                 </ListItemButton>
             </React.Fragment>
             <Divider sx={{ my: 1 }} />

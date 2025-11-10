@@ -1,53 +1,76 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getParents } from '../../../redux/parentRelated/parentHandle';
-import TableTemplate from '../../../components/TableTemplate';
-import { Paper, Box, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { getAllSclasses } from '../../../redux/sclassRelated/sclassHandle';
+import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Typography, Box, CircularProgress } from '@mui/material';
+import { StyledTableCell, StyledTableRow } from '../../../components/styles';
 
 const ShowParents = () => {
     const dispatch = useDispatch();
-    const { parentsList, loading } = useSelector((state) => state.parent);
-    const { currentUser } = useSelector((state) => state.user);
+    const navigate = useNavigate();
+    const { currentUser } = useSelector(state => state.user);
+    const { sclassesList, loading } = useSelector(state => state.sclass);
 
     useEffect(() => {
-        if (currentUser) {
-            dispatch(getParents(currentUser._id));
+        if (currentUser?._id) {
+            dispatch(getAllSclasses(currentUser._id, 'Sclass'));
         }
     }, [dispatch, currentUser]);
 
-    const columns = [
-        { id: 'name', label: 'Parent Name', minWidth: 150 },
-        { id: 'studentName', label: 'Student Name', minWidth: 150 },
-        { id: 'rollNum', label: 'Roll Number', minWidth: 120 },
-        { id: 'mobile', label: 'Mobile Number', minWidth: 150 },
-        { id: 'className', label: 'Class', minWidth: 100 },
-    ];
-
-    const rows = parentsList.map((parent) => ({
-        name: parent.name,
-        studentName: parent.student?.name || 'N/A',
-        rollNum: parent.student?.rollNum || 'N/A',
-        mobile: parent.mobile,
-        className: parent.student?.sclassName?.sclassName || 'N/A',
-    }));
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
 
     return (
-        <Box sx={{ width: '100%', overflow: 'hidden' }}>
-            <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-                <Typography variant="h4" sx={{ padding: 2, textAlign: 'center', fontWeight: 'bold' }}>
-                    Parents List
-                </Typography>
-                {parentsList.length === 0 && !loading ? (
-                    <Typography variant="h6" sx={{ padding: 4, textAlign: 'center', color: 'text.secondary' }}>
-                        No parents found. Add students with parent details to see them here.
-                    </Typography>
-                ) : (
-                    <TableTemplate
-                        columns={columns}
-                        rows={rows}
-                        loading={loading}
-                    />
-                )}
+        <Box sx={{ p: 3 }}>
+            <Typography variant="h4" sx={{ mb: 3, fontWeight: 'bold' }}>
+                Parents Management
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 3, color: 'text.secondary' }}>
+                Select a class to view parents and students
+            </Typography>
+            
+            <Paper>
+                <TableContainer>
+                    <Table>
+                        <TableHead>
+                            <StyledTableRow>
+                                <StyledTableCell>Class Name</StyledTableCell>
+                                <StyledTableCell align="right">Actions</StyledTableCell>
+                            </StyledTableRow>
+                        </TableHead>
+                        <TableBody>
+                            {sclassesList.length > 0 ? (
+                                sclassesList.map((sclass) => (
+                                    <StyledTableRow key={sclass._id}>
+                                        <TableCell>{sclass.sclassName}</TableCell>
+                                        <TableCell align="right">
+                                            <Button
+                                                variant="contained"
+                                                color="primary"
+                                                onClick={() => navigate(`/Admin/parents/class/${sclass._id}`)}
+                                            >
+                                                View Parents
+                                            </Button>
+                                        </TableCell>
+                                    </StyledTableRow>
+                                ))
+                            ) : (
+                                <StyledTableRow>
+                                    <TableCell colSpan={2} align="center">
+                                        <Typography variant="body2" color="text.secondary">
+                                            No classes found. Please add classes first.
+                                        </Typography>
+                                    </TableCell>
+                                </StyledTableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
             </Paper>
         </Box>
     );

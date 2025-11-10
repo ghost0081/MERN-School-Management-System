@@ -12,6 +12,7 @@ import ParentHomePage from './parent/ParentHomePage';
 import ParentAssignments from './parent/ParentAssignments';
 import ParentAttendance from './parent/ParentAttendance';
 import ParentFees from './parent/ParentFees';
+import ParentShop from './parent/ParentShop';
 
 const ParentDashboard = () => {
   const [open, setOpen] = useState(true);
@@ -78,6 +79,7 @@ const ParentDashboard = () => {
           <Route path='/Parent/attendance' element={<ParentAttendance />} />
           <Route path='/Parent/assignments' element={<ParentAssignments />} />
           <Route path='/Parent/fees' element={<ParentFees />} />
+          <Route path='/Parent/shop' element={<ParentShop />} />
           <Route path='/logout' element={<Logout />} />
         </Routes>
       </Box>
