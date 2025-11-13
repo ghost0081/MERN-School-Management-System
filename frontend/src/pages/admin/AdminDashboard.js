@@ -50,6 +50,7 @@ import PayrollHomePage from './payrollRelated/PayrollHomePage';
 import StaffPayrollPage from './payrollRelated/StaffPayrollPage';
 import AddStationery from './stationeryRelated/AddStationery';
 import StationeryInvoices from './stationeryRelated/StationeryInvoices';
+import ReportsDashboard from './reports/ReportsDashboard';
 
 import AddClass from './classRelated/AddClass';
 import ClassDetails from './classRelated/ClassDetails';
@@ -162,6 +163,7 @@ const AdminDashboard = () => {
 
                         <Route path="/Admin/teacher-leave" element={<TeacherLeavePage />} />
                         <Route path="/Admin/parents" element={<ShowParents />} />
+                        <Route path="/Admin/reports" element={<ReportsDashboard />} />
                         <Route path="/Admin/parents/class/:id" element={<ClassParentsPage />} />
                         
                         {/* Staff */}

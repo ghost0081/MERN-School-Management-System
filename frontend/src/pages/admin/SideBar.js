@@ -22,6 +22,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import FamilyRestroomIcon from '@mui/icons-material/FamilyRestroom';
 import GroupsIcon from '@mui/icons-material/Groups';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
+import InsightsIcon from '@mui/icons-material/Insights';
 
 const SideBar = () => {
     const location = useLocation();
@@ -96,6 +97,12 @@ const SideBar = () => {
                         <EventBusyIcon color={location.pathname.startsWith("/Admin/teacher-leave") ? 'primary' : 'inherit'} />
                     </ListItemIcon>
                     <ListItemText primary="Teacher Leave" />
+                </ListItemButton>
+                <ListItemButton component={Link} to="/Admin/reports">
+                    <ListItemIcon>
+                        <InsightsIcon color={location.pathname.startsWith("/Admin/reports") ? 'primary' : 'inherit'} />
+                    </ListItemIcon>
+                    <ListItemText primary="Reports" />
                 </ListItemButton>
                 <ListItemButton component={Link} to="/Admin/parents">
                     <ListItemIcon>

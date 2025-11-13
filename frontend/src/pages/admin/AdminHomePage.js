@@ -13,6 +13,8 @@ import { getAllStudents } from '../../redux/studentRelated/studentHandle';
 import { getAllTeachers } from '../../redux/teacherRelated/teacherHandle';
 import { getFinancialAccounting } from '../../redux/financialRelated/financialHandle';
 import FinancialAccounting from './financialRelated/FinancialAccounting';
+import { fetchAttendanceReport, fetchFeesReport } from '../../redux/reportRelated/reportHandle';
+import AttendanceFeesCharts from '../../components/reports/AttendanceFeesCharts';
 
 const AdminHomePage = () => {
     const dispatch = useDispatch();
@@ -32,6 +34,8 @@ const AdminHomePage = () => {
         dispatch(getAllTeachers(adminID));
         // Fetch current year financial data for Fees Collection card
         dispatch(getFinancialAccounting(adminID, currentYear));
+        dispatch(fetchAttendanceReport(adminID, 6));
+        dispatch(fetchFeesReport(adminID, 6));
     }, [adminID, dispatch, currentYear]);
 
     const numberOfStudents = studentsList && studentsList.length;
@@ -81,7 +85,10 @@ const AdminHomePage = () => {
                             <Data start={0} end={totalFeesRevenue} duration={2.5} prefix="₹" />
                         </StyledPaper>
                     </Grid>
-                    <Grid item xs={12} md={12} lg={12}>
+                    <Grid item xs={12}>
+                        <AttendanceFeesCharts hideSummaries />
+                    </Grid>
+                    <Grid item xs={12}>
                         <FinancialAccounting />
                     </Grid>
                     <Grid item xs={12} md={12} lg={12}>
