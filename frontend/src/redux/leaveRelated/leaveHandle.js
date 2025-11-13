@@ -1,10 +1,12 @@
 import axios from 'axios';
 import { getRequest, getSuccess, getFailed, getError, postDone } from './leaveSlice';
 
+const BASE_URL = process.env.REACT_APP_BASE_URL || 'http://localhost:5000';
+
 export const createLeave = (fields) => async (dispatch) => {
     dispatch(getRequest());
     try {
-        await axios.post(`${process.env.REACT_APP_BASE_URL}/LeaveCreate`, fields, { headers: { 'Content-Type': 'application/json' } });
+        await axios.post(`${BASE_URL}/LeaveCreate`, fields, { headers: { 'Content-Type': 'application/json' } });
         dispatch(postDone());
     } catch (error) {
         dispatch(getError(error));
@@ -14,7 +16,7 @@ export const createLeave = (fields) => async (dispatch) => {
 export const getTeacherLeaves = (teacherId) => async (dispatch) => {
     dispatch(getRequest());
     try {
-        const result = await axios.get(`${process.env.REACT_APP_BASE_URL}/LeaveList/teacher/${teacherId}`);
+        const result = await axios.get(`${BASE_URL}/LeaveList/teacher/${teacherId}`);
         if (result.data.message) dispatch(getFailed(result.data.message));
         else dispatch(getSuccess(result.data));
     } catch (error) {
@@ -25,7 +27,7 @@ export const getTeacherLeaves = (teacherId) => async (dispatch) => {
 export const getSchoolLeaves = (schoolId) => async (dispatch) => {
     dispatch(getRequest());
     try {
-        const result = await axios.get(`${process.env.REACT_APP_BASE_URL}/LeaveList/school/${schoolId}`);
+        const result = await axios.get(`${BASE_URL}/LeaveList/school/${schoolId}`);
         if (result.data.message) dispatch(getFailed(result.data.message));
         else dispatch(getSuccess(result.data));
     } catch (error) {
@@ -33,20 +35,12 @@ export const getSchoolLeaves = (schoolId) => async (dispatch) => {
     }
 }
 
-export const setLeaveStatus = (leaveId, status) => async (dispatch) => {
+export const setLeaveStatus = (leaveId, payload) => async (dispatch) => {
     dispatch(getRequest());
     try {
-        await axios.put(`${process.env.REACT_APP_BASE_URL}/LeaveStatus/${leaveId}`, { status }, { headers: { 'Content-Type': 'application/json' } });
+        await axios.put(`${BASE_URL}/LeaveStatus/${leaveId}`, payload, { headers: { 'Content-Type': 'application/json' } });
         dispatch(postDone());
     } catch (error) {
         dispatch(getError(error));
     }
 }
-
-
-
-
-
-
-
-
