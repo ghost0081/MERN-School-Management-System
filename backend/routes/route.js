@@ -34,6 +34,7 @@ const { getPayrollByStaff, getPayrollByEmployee, getPayrollBySchool, updatePayro
 const { getFinancialAccounting } = require('../controllers/financial-controller.js');
 const { getStationery, getStationeryDetail, addStationery, updateStationery, deleteStationery, createInvoice, getInvoices, getInvoiceDetail, deleteInvoice } = require('../controllers/stationery-controller.js');
 const { getAttendanceReport, getFeesReport } = require('../controllers/report-controller.js');
+const { createVisitor, listVisitors, updateVisitor } = require('../controllers/visitor-controller.js');
 
 // Admin
 router.post('/AdminReg', adminRegister);
@@ -183,6 +184,11 @@ router.get('/Financial/Accounting', getFinancialAccounting); // ?schoolId=&year=
 // Reports
 router.get('/Reports/attendance', getAttendanceReport); // ?schoolId=&months=
 router.get('/Reports/fees', getFeesReport); // ?schoolId=&months=
+
+// Visitors / Frontdesk
+router.post('/Visitors', createVisitor);
+router.get('/Visitors', listVisitors); // ?schoolId=&status=&limit=
+router.put('/Visitors/:id', updateVisitor);
 
 // Stationery
 router.get('/Stationery/:schoolId', getStationery); // Get all products

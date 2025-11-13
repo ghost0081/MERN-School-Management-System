@@ -8,7 +8,7 @@ import {
   CircularProgress,
   Backdrop,
 } from '@mui/material';
-import { AccountCircle, School, Group, FamilyRestroom, Groups } from '@mui/icons-material';
+import { AccountCircle, School, Group, FamilyRestroom, Groups, Badge } from '@mui/icons-material';
 import styled from 'styled-components';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../redux/userRelated/userHandle';
@@ -75,6 +75,9 @@ const ChooseUser = ({ visitor }) => {
       else {
         navigate('/Stafflogin');
       }
+    }
+    else if (user === "Frontdesk") {
+      navigate('/Adminlogin?next=/Admin/frontdesk');
     }
   }
 
@@ -166,6 +169,19 @@ const ChooseUser = ({ visitor }) => {
                   Staff
                 </StyledTypography>
                 Login as staff to view your details and other information.
+              </div>
+            </StyledPaper>
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <StyledPaper elevation={3}>
+              <div onClick={() => navigateHandler("Frontdesk")}>
+                <Box mb={2}>
+                  <Badge fontSize="large" />
+                </Box>
+                <StyledTypography>
+                  Frontdesk
+                </StyledTypography>
+                Manage visitor registrations and generate visitor cards.
               </div>
             </StyledPaper>
           </Grid>

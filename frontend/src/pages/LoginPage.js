@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button, Grid, Box, Typography, Paper, Checkbox, FormControlLabel, TextField, CssBaseline, IconButton, InputAdornment, CircularProgress, Backdrop } from '@mui/material';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -16,6 +16,7 @@ const LoginPage = ({ role }) => {
 
     const dispatch = useDispatch()
     const navigate = useNavigate()
+    const location = useLocation();
 
     const { status, currentUser, response, error, currentRole } = useSelector(state => state.user);;
 
@@ -115,10 +116,13 @@ const LoginPage = ({ role }) => {
         }
     }
 
+    const searchParams = new URLSearchParams(location.search);
+    const nextPath = searchParams.get('next');
+
     useEffect(() => {
         if (status === 'success' || currentUser !== null) {
             if (currentRole === 'Admin') {
-                navigate('/Admin/dashboard');
+                navigate(nextPath || '/Admin/dashboard');
             }
             else if (currentRole === 'Student') {
                 navigate('/Student/dashboard');
@@ -141,7 +145,7 @@ const LoginPage = ({ role }) => {
             setLoader(false)
             setGuestLoader(false)
         }
-    }, [status, currentRole, navigate, error, response, currentUser]);
+    }, [status, currentRole, navigate, error, response, currentUser, nextPath]);
 
     return (
         <ThemeProvider theme={defaultTheme}>

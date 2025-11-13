@@ -23,6 +23,7 @@ import FamilyRestroomIcon from '@mui/icons-material/FamilyRestroom';
 import GroupsIcon from '@mui/icons-material/Groups';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import InsightsIcon from '@mui/icons-material/Insights';
+import BadgeIcon from '@mui/icons-material/Badge';
 
 const SideBar = () => {
     const location = useLocation();
@@ -32,6 +33,9 @@ const SideBar = () => {
     const [stationeryOpen, setStationeryOpen] = React.useState(
         location.pathname.startsWith("/Admin/stationery") || location.pathname.startsWith("/Admin/invoices")
     );
+    const [frontdeskOpen, setFrontdeskOpen] = React.useState(
+        location.pathname.startsWith("/Admin/frontdesk") || location.pathname.startsWith("/Admin/visitors")
+    );
 
     const handleStaffClick = () => {
         setStaffOpen(!staffOpen);
@@ -39,6 +43,10 @@ const SideBar = () => {
 
     const handleStationeryClick = () => {
         setStationeryOpen(!stationeryOpen);
+    };
+
+    const handleFrontdeskClick = () => {
+        setFrontdeskOpen(!frontdeskOpen);
     };
 
     return (
@@ -98,6 +106,37 @@ const SideBar = () => {
                     </ListItemIcon>
                     <ListItemText primary="Teacher Leave" />
                 </ListItemButton>
+                <ListItemButton onClick={handleFrontdeskClick}>
+                    <ListItemIcon>
+                        <BadgeIcon color={(location.pathname.startsWith("/Admin/frontdesk") || location.pathname.startsWith("/Admin/visitors")) ? 'primary' : 'inherit'} />
+                    </ListItemIcon>
+                    <ListItemText primary="Frontdesk" />
+                    {frontdeskOpen ? <ExpandLess /> : <ExpandMore />}
+                </ListItemButton>
+                <Collapse in={frontdeskOpen} timeout="auto" unmountOnExit>
+                    <List component="div" disablePadding>
+                        <ListItemButton
+                            component={Link}
+                            to="/Admin/frontdesk"
+                            sx={{ pl: 4 }}
+                        >
+                            <ListItemIcon>
+                                <BadgeIcon color={location.pathname.startsWith("/Admin/frontdesk") ? 'primary' : 'inherit'} />
+                            </ListItemIcon>
+                            <ListItemText primary="Frontdesk Desk" />
+                        </ListItemButton>
+                        <ListItemButton
+                            component={Link}
+                            to="/Admin/visitors"
+                            sx={{ pl: 4 }}
+                        >
+                            <ListItemIcon>
+                                <GroupsIcon color={location.pathname.startsWith("/Admin/visitors") ? 'primary' : 'inherit'} />
+                            </ListItemIcon>
+                            <ListItemText primary="Visitors Log" />
+                        </ListItemButton>
+                    </List>
+                </Collapse>
                 <ListItemButton component={Link} to="/Admin/reports">
                     <ListItemIcon>
                         <InsightsIcon color={location.pathname.startsWith("/Admin/reports") ? 'primary' : 'inherit'} />
