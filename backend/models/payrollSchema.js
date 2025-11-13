@@ -29,6 +29,10 @@ const payrollSchema = new mongoose.Schema({
         required: true,
         // Default to staff's salary if not specified
     },
+    baseAmount: {
+        type: Number,
+        default: 0,
+    },
     status: {
         type: String,
         enum: ['Paid', 'Unpaid'],

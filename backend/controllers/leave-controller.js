@@ -52,7 +52,6 @@ const setLeaveStatus = async (req, res) => {
             deductionApplied,
             deductionAmount,
             deductionReason,
-            finalAmount,
             approvedBy,
         } = req.body;
 
@@ -61,7 +60,7 @@ const setLeaveStatus = async (req, res) => {
             return res.status(404).send({ message: 'Leave not found' });
         }
 
-        const previousDeduction = leave.deductionAmount || 0;
+        const previousDeduction = Number(leave.deductionAmount || 0);
         const previousDeductionApplied = leave.deductionApplied;
         const monthKey = leave.fromDate ? new Date(leave.fromDate).toISOString().slice(0, 7) : null;
 
@@ -74,6 +73,39 @@ const setLeaveStatus = async (req, res) => {
         leave.approvedAt = new Date();
 
         let payrollRecord = null;
+        let otherDeductions = 0;
+
+        if (monthKey) {
+            payrollRecord = await Payroll.findOne({
+                teacher: leave.teacher,
+                school: leave.school,
+                month: monthKey,
+            });
+            if (payrollRecord) {
+                otherDeductions = Number(payrollRecord.deductions || 0);
+                if (previousDeductionApplied) {
+                    otherDeductions = Math.max(0, otherDeductions - previousDeduction);
+                }
+            }
+        }
+
+        const applyPayrollUpdate = async (record, deductionsValue, remarks) => {
+            if (!record) return undefined;
+            if (record.baseAmount === undefined || record.baseAmount === null) {
+                const net = Number(record.amount) || 0;
+                const existingDeductions = Number(record.deductions || 0);
+                record.baseAmount = net + existingDeductions;
+            }
+            record.deductions = Math.max(0, Number(deductionsValue) || 0);
+            if (remarks) {
+                record.remarks = remarks;
+            }
+            const base = Number(record.baseAmount) || 0;
+            const finalSalary = Math.max(0, base - record.deductions);
+            record.amount = finalSalary;
+            await record.save();
+            return finalSalary;
+        };
 
         if (status === 'Approved') {
             const shouldDeduct = Boolean(deductionApplied) && Number(deductionAmount) > 0;
@@ -84,89 +116,56 @@ const setLeaveStatus = async (req, res) => {
                 leave.deductionAmount = newDeductionAmount;
                 leave.deductionReason = deductionReason || leave.deductionReason;
                 leave.deductionMonth = monthKey;
-                if (finalAmount !== undefined && finalAmount !== null) {
-                    leave.finalAmount = Number(finalAmount);
-                }
 
-                if (monthKey) {
-                    payrollRecord = await Payroll.findOne({
+                if (!payrollRecord && monthKey) {
+                    payrollRecord = new Payroll({
                         teacher: leave.teacher,
+                        employeeType: 'Teacher',
                         school: leave.school,
                         month: monthKey,
+                        status: 'Unpaid',
+                        amount: 0,
+                        baseAmount: 0,
+                        deductions: 0,
                     });
+                    otherDeductions = 0;
+                }
 
-                    if (!payrollRecord) {
-                        payrollRecord = new Payroll({
-                            teacher: leave.teacher,
-                            employeeType: 'Teacher',
-                            school: leave.school,
-                            month: monthKey,
-                            status: 'Unpaid',
-                            amount: finalAmount !== undefined && finalAmount !== null ? Number(finalAmount) : 0,
-                            deductions: newDeductionAmount,
-                            remarks: deductionReason || 'Leave deduction applied',
-                        });
-                    } else {
-                        const existingDeductions = payrollRecord.deductions || 0;
-                        const adjustedDeductions = Math.max(
-                            0,
-                            existingDeductions - (previousDeductionApplied ? previousDeduction : 0) + newDeductionAmount
-                        );
-                        payrollRecord.deductions = adjustedDeductions;
-                        if (finalAmount !== undefined && finalAmount !== null) {
-                            payrollRecord.amount = Number(finalAmount);
-                        }
-                        if (deductionReason) {
-                            payrollRecord.remarks = deductionReason;
-                        }
-                    }
-
-                    await payrollRecord.save();
+                if (payrollRecord) {
+                    const updatedDeductions = Math.max(0, otherDeductions + newDeductionAmount);
+                    const finalSalary = await applyPayrollUpdate(
+                        payrollRecord,
+                        updatedDeductions,
+                        deductionReason || payrollRecord.remarks
+                    );
+                    leave.finalAmount = finalSalary;
+                } else {
+                    leave.finalAmount = 0;
                 }
             } else {
-                if (previousDeductionApplied && previousDeduction > 0 && monthKey) {
-                    payrollRecord = await Payroll.findOne({
-                        teacher: leave.teacher,
-                        school: leave.school,
-                        month: monthKey,
-                    });
-                    if (payrollRecord) {
-                        const existingDeductions = payrollRecord.deductions || 0;
-                        payrollRecord.deductions = Math.max(0, existingDeductions - previousDeduction);
-                        if (finalAmount !== undefined && finalAmount !== null) {
-                            payrollRecord.amount = Number(finalAmount);
-                        }
-                        await payrollRecord.save();
-                    }
-                }
-                leave.deductionApplied = false;
                 leave.deductionAmount = 0;
                 leave.deductionReason = undefined;
                 leave.deductionMonth = undefined;
-                if (finalAmount !== undefined && finalAmount !== null) {
-                    leave.finalAmount = Number(finalAmount);
+
+                if (payrollRecord) {
+                    const finalSalary = await applyPayrollUpdate(payrollRecord, otherDeductions);
+                    leave.finalAmount = finalSalary;
                 } else {
                     leave.finalAmount = undefined;
                 }
             }
         } else {
-            if (previousDeductionApplied && previousDeduction > 0 && monthKey) {
-                payrollRecord = await Payroll.findOne({
-                    teacher: leave.teacher,
-                    school: leave.school,
-                    month: monthKey,
-                });
-                if (payrollRecord) {
-                    const existingDeductions = payrollRecord.deductions || 0;
-                    payrollRecord.deductions = Math.max(0, existingDeductions - previousDeduction);
-                    await payrollRecord.save();
-                }
-            }
             leave.deductionApplied = false;
             leave.deductionAmount = 0;
             leave.deductionReason = undefined;
             leave.deductionMonth = undefined;
-            leave.finalAmount = undefined;
+
+            if (payrollRecord && previousDeductionApplied) {
+                const finalSalary = await applyPayrollUpdate(payrollRecord, otherDeductions);
+                leave.finalAmount = finalSalary;
+            } else {
+                leave.finalAmount = undefined;
+            }
         }
 
         const updatedLeave = await leave.save();

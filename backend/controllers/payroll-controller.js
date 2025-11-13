@@ -148,7 +148,21 @@ const getPayrollBySchool = async (req, res) => {
 // Update or create payroll payment status
 const updatePayrollStatus = async (req, res) => {
     try {
-        const { staffId, teacherId, employeeType, month, status, amount, paidDate, paymentMethod, deductions, bonus, remarks, schoolId } = req.body;
+        const {
+            staffId,
+            teacherId,
+            employeeType,
+            month,
+            status,
+            amount,
+            baseAmount,
+            paidDate,
+            paymentMethod,
+            deductions,
+            bonus,
+            remarks,
+            schoolId
+        } = req.body;
 
         if (!month || !status || !schoolId || !employeeType) {
             return res.status(400).send({ message: 'Month, status, school ID, and employee type are required' });
@@ -188,7 +202,6 @@ const updatePayrollStatus = async (req, res) => {
             school: schoolId,
             month: month,
             status: status,
-            amount: amount || defaultAmount,
         };
 
         if (employeeType === 'Staff') {
@@ -197,11 +210,46 @@ const updatePayrollStatus = async (req, res) => {
             updateData.teacher = employeeId;
         }
 
+        const numericBaseAmount = baseAmount !== undefined ? Number(baseAmount) : undefined;
+        const numericAmount = amount !== undefined ? Number(amount) : undefined;
+        const numericDeductions = deductions !== undefined ? Math.max(0, Number(deductions)) : undefined;
+        const numericBonus = bonus !== undefined ? Number(bonus) : undefined;
+
+        if (numericBaseAmount !== undefined && !Number.isNaN(numericBaseAmount)) {
+            updateData.baseAmount = numericBaseAmount;
+        }
+
+        if (numericAmount !== undefined && !Number.isNaN(numericAmount)) {
+            updateData.amount = numericAmount;
+        }
+
+        if (numericBaseAmount === undefined && numericAmount === undefined) {
+            if (employeeType === 'Staff') {
+                updateData.baseAmount = defaultAmount;
+                updateData.amount = defaultAmount;
+            } else if (numericDeductions !== undefined || numericBonus !== undefined) {
+                updateData.baseAmount = defaultAmount;
+            }
+        }
+
+        if (numericDeductions !== undefined) {
+            updateData.deductions = numericDeductions;
+        }
+        if (numericBonus !== undefined) {
+            updateData.bonus = numericBonus;
+        }
+
+        if (numericBaseAmount !== undefined && numericAmount === undefined) {
+            const deductionsValue = numericDeductions !== undefined ? numericDeductions : 0;
+            const bonusValue = numericBonus !== undefined ? numericBonus : 0;
+            updateData.amount = Math.max(0, numericBaseAmount - deductionsValue + bonusValue);
+        } else if (numericAmount !== undefined && updateData.baseAmount === undefined) {
+            updateData.baseAmount = numericAmount;
+        }
+
         if (paidDate) updateData.paidDate = paidDate;
         if (paymentMethod) updateData.paymentMethod = paymentMethod;
-        if (deductions !== undefined) updateData.deductions = deductions;
-        if (bonus !== undefined) updateData.bonus = bonus;
-        if (remarks) updateData.remarks = remarks;
+        if (remarks !== undefined) updateData.remarks = remarks;
         if (status === 'Paid' && !paidDate) {
             updateData.paidDate = new Date();
         }
@@ -215,6 +263,11 @@ const updatePayrollStatus = async (req, res) => {
             updateData,
             { new: true, upsert: true }
         ).populate(...populateFields).populate('school', 'schoolName');
+
+        if (payroll && (payroll.baseAmount === undefined || payroll.baseAmount === null)) {
+            payroll.baseAmount = payroll.amount || 0;
+            await payroll.save();
+        }
 
         res.send(payroll);
     } catch (error) {

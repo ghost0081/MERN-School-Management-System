@@ -5,7 +5,7 @@ import { getAllStaff } from '../../../redux/staffRelated/staffHandle';
 import { getAllTeachers } from '../../../redux/teacherRelated/teacherHandle';
 import { getPayrollBySchool, updatePayrollStatus } from '../../../redux/payrollRelated/payrollHandle';
 import { underControl } from '../../../redux/payrollRelated/payrollSlice';
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Typography, Box, CircularProgress, TextField, MenuItem, InputAdornment, Grid, FormControl, InputLabel, Select, Chip } from '@mui/material';
+import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Typography, Box, CircularProgress, TextField, MenuItem, InputAdornment, Grid, FormControl, InputLabel, Select, Chip, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { StyledTableCell, StyledTableRow } from '../../../components/styles';
 import Popup from '../../../components/Popup';
 
@@ -22,6 +22,16 @@ const PayrollHomePage = () => {
     const [selectedMonth, setSelectedMonth] = useState('');
     const [showPopup, setShowPopup] = useState(false);
     const [message, setMessage] = useState('');
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [editEmployee, setEditEmployee] = useState(null);
+    const [editBaseAmount, setEditBaseAmount] = useState('');
+    const [editDeductions, setEditDeductions] = useState('0');
+    const [editBonus, setEditBonus] = useState('0');
+    const [editRemarks, setEditRemarks] = useState('');
+    const [editStatus, setEditStatus] = useState('Unpaid');
+    const [editPaymentMethod, setEditPaymentMethod] = useState('');
+    const [editPaidDate, setEditPaidDate] = useState('');
+    const [editSubmitting, setEditSubmitting] = useState(false);
 
     // Get current month in YYYY-MM format
     const getCurrentMonth = () => {
@@ -152,6 +162,91 @@ const PayrollHomePage = () => {
         
         await dispatch(updatePayrollStatus(payload));
     };
+
+    const openEditDialog = (employee, payrollData) => {
+        setEditEmployee({ ...employee });
+        const record = payrollData?.payroll || payrollData || {};
+        const base = record.baseAmount ?? (record.amount !== undefined && record.deductions !== undefined ? Number(record.amount) + Number(record.deductions) : '');
+        const deductions = record.deductions !== undefined ? String(record.deductions) : '0';
+        const bonus = record.bonus !== undefined ? String(record.bonus) : '0';
+        const remarks = record.remarks || '';
+        const status = payrollData?.status || record.status || 'Unpaid';
+        const paymentMethod = record.paymentMethod || '';
+        let paidDateValue = '';
+        if (record.paidDate) {
+            const dateObj = new Date(record.paidDate);
+            if (!Number.isNaN(dateObj.getTime())) {
+                paidDateValue = dateObj.toISOString().slice(0, 10);
+            }
+        }
+
+        setEditBaseAmount(base !== undefined && base !== null && base !== '' ? String(base) : '');
+        setEditDeductions(deductions);
+        setEditBonus(bonus);
+        setEditRemarks(remarks);
+        setEditStatus(status);
+        setEditPaymentMethod(paymentMethod);
+        setEditPaidDate(paidDateValue);
+        setEditDialogOpen(true);
+    };
+
+    const closeEditDialog = () => {
+        setEditDialogOpen(false);
+        setEditEmployee(null);
+        setEditBaseAmount('');
+        setEditDeductions('0');
+        setEditBonus('0');
+        setEditRemarks('');
+        setEditStatus('Unpaid');
+        setEditPaymentMethod('');
+        setEditPaidDate('');
+        setEditSubmitting(false);
+    };
+
+    const handleEditSubmit = async () => {
+        if (!editEmployee || !currentUser?._id || !selectedMonth) return;
+        setEditSubmitting(true);
+        const baseValue = editBaseAmount !== '' ? Math.max(0, Number(editBaseAmount)) : 0;
+        const deductionsValue = Math.max(0, Number(editDeductions || 0));
+        const bonusValue = Number(editBonus || 0);
+        const netValue = Math.max(0, baseValue - deductionsValue + bonusValue);
+
+        const payload = {
+            month: selectedMonth,
+            employeeType: editEmployee.employeeType,
+            schoolId: currentUser._id,
+            status: editStatus,
+            baseAmount: baseValue,
+            amount: netValue,
+            deductions: deductionsValue,
+            bonus: bonusValue,
+            remarks: editRemarks,
+        };
+
+        if (editPaymentMethod) {
+            payload.paymentMethod = editPaymentMethod;
+        }
+        if (editPaidDate) {
+            payload.paidDate = new Date(editPaidDate);
+        }
+
+        if (editEmployee.employeeType === 'Staff') {
+            payload.staffId = editEmployee._id;
+        } else {
+            payload.teacherId = editEmployee._id;
+        }
+
+        await dispatch(updatePayrollStatus(payload));
+        setEditSubmitting(false);
+        closeEditDialog();
+    };
+
+    const computedEditNet = (() => {
+        const baseValue = editBaseAmount !== '' ? Math.max(0, Number(editBaseAmount)) : 0;
+        const deductionsValue = Math.max(0, Number(editDeductions || 0));
+        const bonusValue = Number(editBonus || 0);
+        return Math.max(0, baseValue - deductionsValue + bonusValue);
+    })();
 
     const loading = staffLoading || teacherLoading || payrollLoading;
 
@@ -288,6 +383,15 @@ const PayrollHomePage = () => {
                                                     >
                                                         View Details
                                                     </Button>
+                                                    <Button
+                                                        variant="outlined"
+                                                        color="primary"
+                                                        size="small"
+                                                        onClick={() => openEditDialog(employee, payroll)}
+                                                        disabled={!selectedMonth}
+                                                    >
+                                                        Update
+                                                    </Button>
                                                 </Box>
                                             </TableCell>
                                         </StyledTableRow>
@@ -307,6 +411,86 @@ const PayrollHomePage = () => {
                 </TableContainer>
             </Paper>
             <Popup message={message} setShowPopup={setShowPopup} showPopup={showPopup} />
+
+            <Dialog open={editDialogOpen} onClose={closeEditDialog} maxWidth="sm" fullWidth>
+                <DialogTitle>Update Payroll</DialogTitle>
+                <DialogContent dividers>
+                    {editEmployee && (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <Typography variant="subtitle1" fontWeight="bold">
+                                {editEmployee.name} ({editEmployee.role})
+                            </Typography>
+                            <TextField
+                                label="Base Salary (₹)"
+                                type="number"
+                                value={editBaseAmount}
+                                onChange={(e) => setEditBaseAmount(e.target.value)}
+                                fullWidth
+                                inputProps={{ min: 0 }}
+                            />
+                            <TextField
+                                label="Deductions (₹)"
+                                type="number"
+                                value={editDeductions}
+                                onChange={(e) => setEditDeductions(e.target.value)}
+                                fullWidth
+                                inputProps={{ min: 0 }}
+                                helperText="Total deductions for this month"
+                            />
+                            <TextField
+                                label="Bonus (₹)"
+                                type="number"
+                                value={editBonus}
+                                onChange={(e) => setEditBonus(e.target.value)}
+                                fullWidth
+                            />
+                            <TextField
+                                label="Payment Method"
+                                value={editPaymentMethod}
+                                onChange={(e) => setEditPaymentMethod(e.target.value)}
+                                fullWidth
+                            />
+                            <TextField
+                                label="Paid Date"
+                                type="date"
+                                value={editPaidDate}
+                                onChange={(e) => setEditPaidDate(e.target.value)}
+                                fullWidth
+                                InputLabelProps={{ shrink: true }}
+                            />
+                            <TextField
+                                label="Remarks"
+                                value={editRemarks}
+                                onChange={(e) => setEditRemarks(e.target.value)}
+                                fullWidth
+                                multiline
+                                minRows={2}
+                            />
+                            <FormControl fullWidth>
+                                <InputLabel id="edit-status-label">Status</InputLabel>
+                                <Select
+                                    labelId="edit-status-label"
+                                    value={editStatus}
+                                    label="Status"
+                                    onChange={(e) => setEditStatus(e.target.value)}
+                                >
+                                    <MenuItem value="Paid">Paid</MenuItem>
+                                    <MenuItem value="Unpaid">Unpaid</MenuItem>
+                                </Select>
+                            </FormControl>
+                            <Typography variant="body1" sx={{ mt: 1 }}>
+                                Net Salary (after deductions &amp; bonus): <strong>₹{computedEditNet.toLocaleString()}</strong>
+                            </Typography>
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={closeEditDialog}>Cancel</Button>
+                    <Button onClick={handleEditSubmit} variant="contained" disabled={editSubmitting || !editEmployee}>
+                        Save Changes
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };
