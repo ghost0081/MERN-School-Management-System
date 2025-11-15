@@ -53,6 +53,8 @@ import StationeryInvoices from './stationeryRelated/StationeryInvoices';
 import ReportsDashboard from './reports/ReportsDashboard';
 import FrontdeskDashboard from './frontdesk/FrontdeskDashboard';
 import VisitorsListPage from './frontdesk/VisitorsListPage';
+import AdminUploadBooks from './libraryRelated/AdminUploadBooks';
+import LibraryBooks from './libraryRelated/LibraryBooks';
 
 import AddClass from './classRelated/AddClass';
 import ClassDetails from './classRelated/ClassDetails';
@@ -187,6 +189,10 @@ const AdminDashboard = () => {
                         {/* Stationery */}
                         <Route path="/Admin/stationery" element={<AddStationery />} />
                         <Route path="/Admin/invoices" element={<StationeryInvoices />} />
+
+                        {/* Library */}
+                        <Route path="/Admin/library/upload" element={<AdminUploadBooks />} />
+                        <Route path="/Admin/library/books" element={<LibraryBooks />} />
 
                         <Route path="/logout" element={<Logout />} />
                     </Routes>

@@ -16,6 +16,7 @@ import financialReducer from './financialRelated/financialSlice';
 import stationeryReducer from './stationeryRelated/stationerySlice';
 import { reportReducer } from './reportRelated/reportSlice';
 import { visitorReducer } from './visitorRelated/visitorSlice';
+import { libraryReducer } from './libraryRelated/librarySlice';
 
 const store = configureStore({
     reducer: {
@@ -36,6 +37,7 @@ const store = configureStore({
         stationery: stationeryReducer,
         report: reportReducer,
         visitor: visitorReducer,
+        library: libraryReducer,
     },
 });
 

@@ -24,6 +24,8 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import InsightsIcon from '@mui/icons-material/Insights';
 import BadgeIcon from '@mui/icons-material/Badge';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 
 const SideBar = () => {
     const location = useLocation();
@@ -36,6 +38,9 @@ const SideBar = () => {
     const [frontdeskOpen, setFrontdeskOpen] = React.useState(
         location.pathname.startsWith("/Admin/frontdesk") || location.pathname.startsWith("/Admin/visitors")
     );
+    const [libraryOpen, setLibraryOpen] = React.useState(
+        location.pathname.startsWith("/Admin/library")
+    );
 
     const handleStaffClick = () => {
         setStaffOpen(!staffOpen);
@@ -47,6 +52,10 @@ const SideBar = () => {
 
     const handleFrontdeskClick = () => {
         setFrontdeskOpen(!frontdeskOpen);
+    };
+
+    const handleLibraryClick = () => {
+        setLibraryOpen(!libraryOpen);
     };
 
     return (
@@ -214,6 +223,37 @@ const SideBar = () => {
                                 <ReceiptIcon color={location.pathname.startsWith("/Admin/invoices") ? 'primary' : 'inherit'} />
                             </ListItemIcon>
                             <ListItemText primary="Sold" />
+                        </ListItemButton>
+                    </List>
+                </Collapse>
+                <ListItemButton onClick={handleLibraryClick}>
+                    <ListItemIcon>
+                        <MenuBookIcon color={location.pathname.startsWith("/Admin/library") ? 'primary' : 'inherit'} />
+                    </ListItemIcon>
+                    <ListItemText primary="Library" />
+                    {libraryOpen ? <ExpandLess /> : <ExpandMore />}
+                </ListItemButton>
+                <Collapse in={libraryOpen} timeout="auto" unmountOnExit>
+                    <List component="div" disablePadding>
+                        <ListItemButton 
+                            component={Link} 
+                            to="/Admin/library/upload" 
+                            sx={{ pl: 4 }}
+                        >
+                            <ListItemIcon>
+                                <UploadFileIcon color={location.pathname.startsWith("/Admin/library/upload") ? 'primary' : 'inherit'} />
+                            </ListItemIcon>
+                            <ListItemText primary="Upload Books" />
+                        </ListItemButton>
+                        <ListItemButton 
+                            component={Link} 
+                            to="/Admin/library/books" 
+                            sx={{ pl: 4 }}
+                        >
+                            <ListItemIcon>
+                                <MenuBookIcon color={location.pathname.startsWith("/Admin/library/books") ? 'primary' : 'inherit'} />
+                            </ListItemIcon>
+                            <ListItemText primary="Search Books" />
                         </ListItemButton>
                     </List>
                 </Collapse>

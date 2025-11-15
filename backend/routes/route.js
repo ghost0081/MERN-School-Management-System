@@ -35,6 +35,8 @@ const { getFinancialAccounting } = require('../controllers/financial-controller.
 const { getStationery, getStationeryDetail, addStationery, updateStationery, deleteStationery, createInvoice, getInvoices, getInvoiceDetail, deleteInvoice } = require('../controllers/stationery-controller.js');
 const { getAttendanceReport, getFeesReport } = require('../controllers/report-controller.js');
 const { createVisitor, listVisitors, updateVisitor } = require('../controllers/visitor-controller.js');
+const { importBooks, searchBooks, uploadMiddleware } = require('../controllers/books-controller.js');
+const { createCopy, listCopies } = require('../controllers/copies-controller.js');
 
 // Admin
 router.post('/AdminReg', adminRegister);
@@ -202,5 +204,13 @@ router.post('/Invoice', createInvoice); // Create invoice/sale
 router.get('/Invoices/:schoolId', getInvoices); // Get all invoices
 router.get('/Invoice/:id', getInvoiceDetail); // Get single invoice
 router.delete('/Invoice/:id', deleteInvoice); // Delete invoice (restores inventory)
+
+// Library - Books
+router.post('/Books/Import', uploadMiddleware, importBooks); // ?dryRun=true|false - Import books from Excel/CSV
+router.get('/Books', searchBooks); // ?q=&page=&limit= - Search books
+
+// Library - Copies
+router.post('/Copies', createCopy); // Create a library copy
+router.get('/Copies', listCopies); // ?bookId= - List copies (optionally filtered by bookId)
 
 module.exports = router;
