@@ -10,6 +10,7 @@ import ParentDashboard from './pages/ParentDashboard';
 import StaffDashboard from './pages/StaffDashboard';
 import AdminRegisterPage from './pages/admin/AdminRegisterPage';
 import ChooseUser from './pages/ChooseUser';
+import FrontdeskMainDashboard from './pages/frontdesk/FrontdeskMainDashboard';
 
 const App = () => {
   const { currentRole } = useSelector(state => state.user);
@@ -29,6 +30,8 @@ const App = () => {
           <Route path="/Stafflogin" element={<LoginPage role="Staff" />} />
 
           <Route path="/Adminregister" element={<AdminRegisterPage />} />
+
+          <Route path="/frontdesk/*" element={<FrontdeskMainDashboard />} />
 
           <Route path='*' element={<Navigate to="/" />} />
         </Routes>}

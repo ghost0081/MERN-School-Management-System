@@ -27,15 +27,17 @@ const VisitorsListPage = () => {
 
     const [statusFilter, setStatusFilter] = useState('All');
 
+    // Use currentUser if available, otherwise work without school (public frontdesk)
+    const schoolId = currentUser?._id || null;
+
     useEffect(() => {
-        if (currentUser?._id) {
-            const params = {};
-            if (statusFilter !== 'All') {
-                params.status = statusFilter;
-            }
-            dispatch(fetchVisitors(currentUser._id, params));
+        const params = {};
+        if (statusFilter !== 'All') {
+            params.status = statusFilter;
         }
-    }, [dispatch, currentUser, statusFilter]);
+        // Fetch visitors - schoolId is optional for public frontdesk
+        dispatch(fetchVisitors(schoolId, params));
+    }, [dispatch, schoolId, statusFilter]);
 
     const tableData = useMemo(
         () =>

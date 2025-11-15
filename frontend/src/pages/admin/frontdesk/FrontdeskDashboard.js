@@ -31,11 +31,13 @@ const FrontdeskDashboard = () => {
     const [form, setForm] = useState(defaultFormState);
     const [formError, setFormError] = useState('');
 
+    // Use currentUser if available, otherwise work without school (public frontdesk)
+    const schoolId = currentUser?._id || null;
+
     useEffect(() => {
-        if (currentUser?._id) {
-            dispatch(fetchVisitors(currentUser._id, { status: 'Checked In', limit: 50 }));
-        }
-    }, [dispatch, currentUser]);
+        // Fetch visitors - schoolId is optional for public frontdesk
+        dispatch(fetchVisitors(schoolId, { status: 'Checked In', limit: 50 }));
+    }, [dispatch, schoolId]);
 
     useEffect(() => {
         if (recentVisitor) {
@@ -58,14 +60,10 @@ const FrontdeskDashboard = () => {
             setFormError('Visitor name is required.');
             return;
         }
-        if (!currentUser?._id) {
-            setFormError('School identifier missing.');
-            return;
-        }
 
         const payload = {
             ...form,
-            school: currentUser._id,
+            school: schoolId || null, // School is optional for public frontdesk
         };
         dispatch(createVisitor(payload));
     };

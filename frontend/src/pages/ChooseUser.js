@@ -77,7 +77,7 @@ const ChooseUser = ({ visitor }) => {
       }
     }
     else if (user === "Frontdesk") {
-      navigate('/Adminlogin?next=/Admin/frontdesk');
+      navigate('/frontdesk');
     }
   }
 

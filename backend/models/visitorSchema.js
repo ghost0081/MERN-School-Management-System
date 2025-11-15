@@ -26,7 +26,7 @@ const visitorSchema = new mongoose.Schema({
     school: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'admin',
-        required: true,
+        required: false, // Optional for public frontdesk
     },
     checkInTime: {
         type: Date,

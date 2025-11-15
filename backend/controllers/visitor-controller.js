@@ -19,13 +19,11 @@ const generateVisitorCode = async () => {
 const createVisitor = async (req, res) => {
     try {
         const { name, contactNumber, purpose, hostName, notes, school } = req.body;
-        if (!school) {
-            return res.status(400).send({ message: 'School ID is required' });
-        }
         if (!name) {
             return res.status(400).send({ message: 'Visitor name is required' });
         }
 
+        // For public frontdesk, school is optional - use null if not provided
         const visitorCode = await generateVisitorCode();
         const visitor = new Visitor({
             visitorCode,
@@ -34,7 +32,7 @@ const createVisitor = async (req, res) => {
             purpose,
             hostName,
             notes,
-            school,
+            school: school || null,
         });
         const savedVisitor = await visitor.save();
         return res.send(savedVisitor);
@@ -46,11 +44,15 @@ const createVisitor = async (req, res) => {
 const listVisitors = async (req, res) => {
     try {
         const { schoolId, status, limit = 100 } = req.query;
-        if (!schoolId) {
-            return res.status(400).send({ message: 'School ID is required' });
-        }
 
-        const query = { school: schoolId };
+        // School ID is optional for public frontdesk
+        const query = {};
+        if (schoolId) {
+            query.school = schoolId;
+        } else {
+            // If no schoolId, show all visitors (for public frontdesk)
+            query.school = null;
+        }
         if (status) {
             query.status = status;
         }
