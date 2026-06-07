@@ -7,6 +7,7 @@ import ClassOutlinedIcon from '@mui/icons-material/ClassOutlined';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import ExploreIcon from '@mui/icons-material/Explore';
 
 const ParentSideBar = () => {
     const location = useLocation();
@@ -36,6 +37,12 @@ const ParentSideBar = () => {
                         <AccountBalanceIcon color={location.pathname.startsWith("/Parent/fees") ? 'primary' : 'inherit'} />
                     </ListItemIcon>
                     <ListItemText primary="Fees" />
+                </ListItemButton>
+                <ListItemButton component={Link} to="/Parent/tracking">
+                    <ListItemIcon>
+                        <ExploreIcon color={location.pathname.startsWith("/Parent/tracking") ? 'primary' : 'inherit'} />
+                    </ListItemIcon>
+                    <ListItemText primary="Tracking" />
                 </ListItemButton>
                 <ListItemButton component={Link} to="/Parent/shop">
                     <ListItemIcon>

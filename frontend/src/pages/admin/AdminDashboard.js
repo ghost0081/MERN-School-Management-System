@@ -55,6 +55,7 @@ import FrontdeskDashboard from './frontdesk/FrontdeskDashboard';
 import VisitorsListPage from './frontdesk/VisitorsListPage';
 import AdminUploadBooks from './libraryRelated/AdminUploadBooks';
 import LibraryBooks from './libraryRelated/LibraryBooks';
+import TrackerPage from './TrackerPage';
 
 import AddClass from './classRelated/AddClass';
 import ClassDetails from './classRelated/ClassDetails';
@@ -194,6 +195,9 @@ const AdminDashboard = () => {
                         <Route path="/Admin/library/upload" element={<AdminUploadBooks />} />
                         <Route path="/Admin/library/books" element={<LibraryBooks />} />
 
+                        {/* Tracker */}
+                        <Route path="/Admin/tracker" element={<TrackerPage />} />
+
                         <Route path="/logout" element={<Logout />} />
                     </Routes>
                 </Box>
@@ -206,10 +210,7 @@ export default AdminDashboard
 
 const styles = {
     boxStyled: {
-        backgroundColor: (theme) =>
-            theme.palette.mode === 'light'
-                ? theme.palette.grey[100]
-                : theme.palette.grey[900],
+        backgroundColor: (theme) => theme.palette.background.default,
         flexGrow: 1,
         height: '100vh',
         overflowY: 'auto',

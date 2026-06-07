@@ -17,7 +17,7 @@ const App = () => {
 
   return (
     <Router>
-      {currentRole === null &&
+      {(!currentRole || !["Admin", "Student", "Teacher", "Parent", "Staff"].includes(currentRole)) &&
         <Routes>
           <Route path="/" element={<Homepage />} />
           <Route path="/choose" element={<ChooseUser visitor="normal" />} />

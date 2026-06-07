@@ -35,7 +35,10 @@ const importLogSchema = new mongoose.Schema({
             required: true,
         },
     }],
-}, { timestamps: { createdAt: true, updatedAt: false } });
+}, { 
+    timestamps: { createdAt: true, updatedAt: false },
+    suppressReservedKeysWarning: true 
+});
 
 module.exports = mongoose.model('ImportLog', importLogSchema);
 

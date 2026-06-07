@@ -1,4 +1,4 @@
-import { Container, Grid, Paper } from '@mui/material'
+import { Container, Grid, Paper, Box } from '@mui/material'
 import SeeNotice from '../../components/SeeNotice';
 import Students from "../../assets/img1.png";
 import Classes from "../../assets/img2.png";
@@ -51,38 +51,46 @@ const AdminHomePage = () => {
                 <Grid container spacing={3}>
                     <Grid item xs={12} md={3} lg={3}>
                         <StyledPaper>
-                            <img src={Students} alt="Students" />
-                            <Title>
-                                Total Students
-                            </Title>
-                            <Data start={0} end={numberOfStudents} duration={2.5} />
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+                                <img src={Students} alt="Students" style={{ height: '48px', objectFit: 'contain' }} />
+                            </Box>
+                            <Box>
+                                <Title>Total Students</Title>
+                                <Data start={0} end={numberOfStudents} duration={2.5} />
+                            </Box>
                         </StyledPaper>
                     </Grid>
                     <Grid item xs={12} md={3} lg={3}>
                         <StyledPaper>
-                            <img src={Classes} alt="Classes" />
-                            <Title>
-                                Total Classes
-                            </Title>
-                            <Data start={0} end={numberOfClasses} duration={5} />
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+                                <img src={Classes} alt="Classes" style={{ height: '48px', objectFit: 'contain' }} />
+                            </Box>
+                            <Box>
+                                <Title>Total Classes</Title>
+                                <Data start={0} end={numberOfClasses} duration={5} />
+                            </Box>
                         </StyledPaper>
                     </Grid>
                     <Grid item xs={12} md={3} lg={3}>
                         <StyledPaper>
-                            <img src={Teachers} alt="Teachers" />
-                            <Title>
-                                Total Teachers
-                            </Title>
-                            <Data start={0} end={numberOfTeachers} duration={2.5} />
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+                                <img src={Teachers} alt="Teachers" style={{ height: '48px', objectFit: 'contain' }} />
+                            </Box>
+                            <Box>
+                                <Title>Total Teachers</Title>
+                                <Data start={0} end={numberOfTeachers} duration={2.5} />
+                            </Box>
                         </StyledPaper>
                     </Grid>
                     <Grid item xs={12} md={3} lg={3}>
                         <StyledPaper>
-                            <img src={Fees} alt="Fees" />
-                            <Title>
-                                Fees Collection
-                            </Title>
-                            <Data start={0} end={totalFeesRevenue} duration={2.5} prefix="₹" />
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+                                <img src={Fees} alt="Fees" style={{ height: '48px', objectFit: 'contain' }} />
+                            </Box>
+                            <Box>
+                                <Title>Fees Collection</Title>
+                                <Data start={0} end={totalFeesRevenue} duration={2.5} prefix="₹" />
+                            </Box>
                         </StyledPaper>
                     </Grid>
                     <Grid item xs={12}>
@@ -104,22 +112,35 @@ const AdminHomePage = () => {
 
 
 const StyledPaper = styled(Paper)`
-  padding: 16px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  height: 200px;
+  height: 100%;
   justify-content: space-between;
-  align-items: center;
-  text-align: center;
+  text-align: left;
+  border-radius: 16px;
+  border: 1px solid #EAEAEC;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  transition: transform 0.2s, box-shadow 0.2s;
+  &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+  }
 `;
 
 const Title = styled.p`
-  font-size: 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #8B8B8B;
+  margin: 16px 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 `;
 
 const Data = styled(CountUp)`
-  font-size: calc(1.3rem + .6vw);
-  color: green;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1E1E1E;
 `;
 
 export default AdminHomePage

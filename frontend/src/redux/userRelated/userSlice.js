@@ -1,12 +1,24 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+let parsedUser = null;
+try {
+    const userString = localStorage.getItem('user');
+    if (userString && userString !== 'undefined') {
+        parsedUser = JSON.parse(userString);
+    }
+} catch (e) {
+    console.error("Error parsing user from localStorage:", e);
+    // Remove the corrupted item
+    localStorage.removeItem('user');
+}
+
 const initialState = {
     status: 'idle',
     userDetails: [],
     tempDetails: [],
     loading: false,
-    currentUser: JSON.parse(localStorage.getItem('user')) || null,
-    currentRole: (JSON.parse(localStorage.getItem('user')) || {}).role || null,
+    currentUser: parsedUser,
+    currentRole: parsedUser ? parsedUser.role : null,
     error: null,
     response: null,
     darkMode: true
