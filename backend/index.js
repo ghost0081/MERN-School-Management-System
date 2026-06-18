@@ -28,11 +28,11 @@ mongoose
 app.use('/', Routes);
 
 // Serve static files from the React frontend app
-app.use(express.static(path.join(__dirname, '../frontend/build')));
+app.use(express.static(path.join(__dirname, 'build')));
 
 // Wildcard route to handle React Router client-side routing
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
 app.listen(PORT, () => {
