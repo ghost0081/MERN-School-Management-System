@@ -37,7 +37,7 @@ const { getAttendanceReport, getFeesReport } = require('../controllers/report-co
 const { createVisitor, listVisitors, updateVisitor } = require('../controllers/visitor-controller.js');
 const { importBooks, searchBooks, uploadMiddleware } = require('../controllers/books-controller.js');
 const { createCopy, listCopies } = require('../controllers/copies-controller.js');
-const { deviceAuthMiddleware, updateGPS, updateCell, getDeviceData, getActiveDevices } = require('../controllers/tracker-controller.js');
+const { deviceAuthMiddleware, updateGPS, getDeviceData, getActiveDevices } = require('../controllers/tracker-controller.js');
 
 // Admin
 router.post('/AdminReg', adminRegister);
@@ -216,7 +216,6 @@ router.get('/Copies', listCopies); // ?bookId= - List copies (optionally filtere
 
 // Tracker Endpoints
 router.post('/api/tracker/gps', deviceAuthMiddleware, updateGPS);
-router.post('/api/tracker/cell', deviceAuthMiddleware, updateCell);
 router.get('/api/tracker/devices', getActiveDevices);
 router.get('/api/admin/:device_id', getDeviceData);
 

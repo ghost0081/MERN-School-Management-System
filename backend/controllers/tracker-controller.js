@@ -13,73 +13,35 @@ const deviceAuthMiddleware = (req, res, next) => {
     return res.status(401).json({ error: "Unauthorized: Invalid or missing X-Device-Token" });
 };
 
-// Update GPS coordinates from device
+// Update coordinates from device
 const updateGPS = async (req, res) => {
     try {
-        const { device_id, latitude, longitude, speed, timestamp } = req.body;
+        const { device_id, latitude, longitude, timestamp, time } = req.body;
         
         if (!device_id) {
             return res.status(400).json({ error: "device_id is required" });
         }
-
-        // Initialize cache entry if not exists
-        if (!trackerCache[device_id]) {
-            trackerCache[device_id] = {
-                device_id,
-                gps: { latitude: 0, longitude: 0, speed: 0, last_updated: null },
-                network: { mcc: 0, mnc: 0, lac: "", cell_id: "", signal: 0, last_updated: null }
-            };
+        if (latitude === undefined || longitude === undefined) {
+            return res.status(400).json({ error: "latitude and longitude are required" });
         }
 
         // Determine date format (seconds vs milliseconds)
         let lastUpdatedDate;
-        if (timestamp) {
-            lastUpdatedDate = timestamp > 9999999999 ? new Date(timestamp) : new Date(timestamp * 1000);
+        const incomingTime = timestamp || time;
+        if (incomingTime) {
+            lastUpdatedDate = incomingTime > 9999999999 ? new Date(incomingTime) : new Date(incomingTime * 1000);
         } else {
             lastUpdatedDate = new Date();
         }
 
-        trackerCache[device_id].gps = {
+        trackerCache[device_id] = {
+            device_id,
             latitude: parseFloat(latitude),
             longitude: parseFloat(longitude),
-            speed: parseFloat(speed) || 0,
             last_updated: lastUpdatedDate.toISOString()
         };
 
-        return res.status(200).json({ success: true, message: "GPS telemetry updated in-memory" });
-    } catch (err) {
-        return res.status(500).json({ error: err.message });
-    }
-};
-
-// Update Cell network metrics from device
-const updateCell = async (req, res) => {
-    try {
-        const { device_id, mcc, mnc, lac, cell_id, signal } = req.body;
-
-        if (!device_id) {
-            return res.status(400).json({ error: "device_id is required" });
-        }
-
-        // Initialize cache entry if not exists
-        if (!trackerCache[device_id]) {
-            trackerCache[device_id] = {
-                device_id,
-                gps: { latitude: 0, longitude: 0, speed: 0, last_updated: null },
-                network: { mcc: 0, mnc: 0, lac: "", cell_id: "", signal: 0, last_updated: null }
-            };
-        }
-
-        trackerCache[device_id].network = {
-            mcc: parseInt(mcc) || 0,
-            mnc: parseInt(mnc) || 0,
-            lac: String(lac || ""),
-            cell_id: String(cell_id || ""),
-            signal: parseInt(signal) || 0,
-            last_updated: new Date().toISOString()
-        };
-
-        return res.status(200).json({ success: true, message: "Cell telemetry updated in-memory" });
+        return res.status(200).json({ success: true, message: "Location updated in-memory" });
     } catch (err) {
         return res.status(500).json({ error: err.message });
     }
@@ -95,8 +57,9 @@ const getDeviceData = async (req, res) => {
             // Return an empty template structure rather than 404 to avoid crashing UI components
             return res.status(200).json({
                 device_id,
-                gps: { latitude: 0, longitude: 0, speed: 0, last_updated: null },
-                network: { mcc: 0, mnc: 0, lac: "", cell_id: "", signal: 0, last_updated: null }
+                latitude: 0,
+                longitude: 0,
+                last_updated: null
             });
         }
 
@@ -119,7 +82,6 @@ const getActiveDevices = async (req, res) => {
 module.exports = {
     deviceAuthMiddleware,
     updateGPS,
-    updateCell,
     getDeviceData,
     getActiveDevices
 };

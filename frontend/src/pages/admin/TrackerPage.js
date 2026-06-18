@@ -14,16 +14,13 @@ import {
     FormControl,
     InputLabel,
     Select,
-    MenuItem,
-    LinearProgress
+    MenuItem
 } from '@mui/material';
 import axios from 'axios';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
-import SpeedIcon from '@mui/icons-material/Speed';
-import CellTowerIcon from '@mui/icons-material/CellTower';
-import SignalCellularAltIcon from '@mui/icons-material/SignalCellularAlt';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import MapIcon from '@mui/icons-material/Map';
+import CellTowerIcon from '@mui/icons-material/CellTower';
 
 const TrackerPage = () => {
     const [devices, setDevices] = useState([]);
@@ -34,12 +31,12 @@ const TrackerPage = () => {
     const [loading, setLoading] = useState(false);
     const [trackerData, setTrackerData] = useState(null);
     const [error, setError] = useState(null);
-    const pathHistoryRef = useRef([]);
 
     const mapRef = useRef(null);
     const markerRef = useRef(null);
     const polylineRef = useRef(null);
     const mapContainerRef = useRef(null);
+    const pathHistoryRef = useRef([]);
 
     // Fetch list of active devices in RAM
     const fetchDevices = async () => {
@@ -47,7 +44,6 @@ const TrackerPage = () => {
             const res = await axios.get(`${process.env.REACT_APP_BASE_URL}/api/tracker/devices`);
             setDevices(res.data || []);
             if (res.data && res.data.length > 0 && !isCustomMode) {
-                // If selected device is not in list, pick the first active one
                 if (!res.data.includes(selectedDevice)) {
                     setSelectedDevice(res.data[0]);
                 }
@@ -132,10 +128,10 @@ const TrackerPage = () => {
 
     // Handle map updates when new coordinates arrive
     useEffect(() => {
-        if (!window.L || !mapRef.current || !trackerData?.gps?.latitude) return;
+        if (!window.L || !mapRef.current || !trackerData?.latitude) return;
 
-        const lat = parseFloat(trackerData.gps.latitude);
-        const lng = parseFloat(trackerData.gps.longitude);
+        const lat = parseFloat(trackerData.latitude);
+        const lng = parseFloat(trackerData.longitude);
         
         // Skip invalid/zero coordinates
         if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) return;
@@ -155,11 +151,11 @@ const TrackerPage = () => {
             });
 
             markerRef.current = window.L.marker(latlng, { icon: studentIcon }).addTo(mapRef.current)
-                .bindPopup(`<b>Device: ${trackerData.device_id}</b><br/>Speed: ${trackerData.gps.speed} km/h`)
+                .bindPopup(`<b>Device: ${trackerData.device_id}</b><br/>Time: ${formatDate(trackerData.last_updated)}`)
                 .openPopup();
         } else {
             markerRef.current.setLatLng(latlng);
-            markerRef.current.getPopup().setContent(`<b>Device: ${trackerData.device_id}</b><br/>Speed: ${trackerData.gps.speed} km/h`);
+            markerRef.current.getPopup().setContent(`<b>Device: ${trackerData.device_id}</b><br/>Time: ${formatDate(trackerData.last_updated)}`);
         }
 
         // Add coordinate to polyline trail
@@ -181,20 +177,6 @@ const TrackerPage = () => {
         return date.toLocaleString();
     };
 
-    // Calculate signal strength quality
-    const getSignalDetails = (dBm) => {
-        if (!dBm || dBm === 0) return { quality: "No Signal", color: "#F44336", percent: 0 };
-        // Map typical dBm levels (-113 dBm to -50 dBm) to 0% - 100%
-        let percent = Math.min(Math.max((dBm + 113) * (100 / 63), 0), 100);
-        
-        if (dBm >= -70) return { quality: "Excellent", color: "#4CAF50", percent };
-        if (dBm >= -85) return { quality: "Good", color: "#2196F3", percent };
-        if (dBm >= -100) return { quality: "Fair", color: "#FF9800", percent };
-        return { quality: "Poor", color: "#F44336", percent };
-    };
-
-    const signalInfo = getSignalDetails(trackerData?.network?.signal);
-
     const activeDeviceId = isCustomMode ? customDevice : selectedDevice;
 
     return (
@@ -204,10 +186,10 @@ const TrackerPage = () => {
                 <Grid container spacing={2} alignItems="center" justifyContent="space-between">
                     <Grid item xs={12} md={5}>
                         <Typography variant="h5" component="h2" fontWeight="700" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <LocationOnIcon color="primary" /> Student Tracking System (ESP32 + EC200U)
+                            <LocationOnIcon color="primary" /> Student Tracking System (ESP32)
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            Live telemetry from student wearables with in-memory server state.
+                            Live GPS telemetry from student wearables with in-memory server state.
                         </Typography>
                     </Grid>
                     
@@ -304,26 +286,20 @@ const TrackerPage = () => {
                                 <CardContent sx={{ p: 3 }}>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                                         <Typography variant="h6" fontWeight="600" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <SpeedIcon color="primary" /> GPS Metrics
+                                            <LocationOnIcon color="primary" /> Location Telemetry
                                         </Typography>
                                     </Box>
                                     
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                         <Typography variant="body2" color="text.secondary">Latitude:</Typography>
                                         <Typography variant="body2" fontWeight="500">
-                                            {trackerData?.gps?.latitude ? parseFloat(trackerData.gps.latitude).toFixed(6) : "0.000000"}
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                        <Typography variant="body2" color="text.secondary">Longitude:</Typography>
-                                        <Typography variant="body2" fontWeight="500">
-                                            {trackerData?.gps?.longitude ? parseFloat(trackerData.gps.longitude).toFixed(6) : "0.000000"}
+                                            {trackerData?.latitude ? parseFloat(trackerData.latitude).toFixed(6) : "0.000000"}
                                         </Typography>
                                     </Box>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
-                                        <Typography variant="body2" color="text.secondary">Speed:</Typography>
-                                        <Typography variant="body2" fontWeight="700" color="primary">
-                                            {trackerData?.gps?.speed !== undefined ? `${trackerData.gps.speed} km/h` : "0 km/h"}
+                                        <Typography variant="body2" color="text.secondary">Longitude:</Typography>
+                                        <Typography variant="body2" fontWeight="500">
+                                            {trackerData?.longitude ? parseFloat(trackerData.longitude).toFixed(6) : "0.000000"}
                                         </Typography>
                                     </Box>
 
@@ -332,78 +308,7 @@ const TrackerPage = () => {
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <Typography variant="caption" color="text.secondary">Last Updated:</Typography>
                                         <Typography variant="caption" fontWeight="500">
-                                            {formatDate(trackerData?.gps?.last_updated)}
-                                        </Typography>
-                                    </Box>
-                                </CardContent>
-                            </Card>
-                        </Grid>
-
-                        {/* Network Metric Card */}
-                        <Grid item xs={12}>
-                            <Card sx={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-                                <CardContent sx={{ p: 3 }}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                                        <Typography variant="h6" fontWeight="600" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <SignalCellularAltIcon color="secondary" /> LTE Signal State
-                                        </Typography>
-                                        <Typography 
-                                            variant="body2" 
-                                            fontWeight="600" 
-                                            sx={{ color: signalInfo.color }}
-                                        >
-                                            {signalInfo.quality}
-                                        </Typography>
-                                    </Box>
-
-                                    <Box sx={{ mb: 2 }}>
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                            <Typography variant="body2" color="text.secondary">Strength:</Typography>
-                                            <Typography variant="body2" fontWeight="700">
-                                                {trackerData?.network?.signal ? `${trackerData.network.signal} dBm` : "N/A"}
-                                            </Typography>
-                                        </Box>
-                                        <LinearProgress 
-                                            variant="determinate" 
-                                            value={signalInfo.percent} 
-                                            sx={{ 
-                                                height: 8, 
-                                                borderRadius: 4,
-                                                backgroundColor: '#E0E0E0',
-                                                '& .MuiLinearProgress-bar': {
-                                                    backgroundColor: signalInfo.color
-                                                }
-                                            }}
-                                        />
-                                    </Box>
-
-                                    <Divider sx={{ my: 1.5 }} />
-
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                        <Typography variant="body2" color="text.secondary">Cell ID:</Typography>
-                                        <Typography variant="body2" fontWeight="500">
-                                            {trackerData?.network?.cell_id || "Unknown"}
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                        <Typography variant="body2" color="text.secondary">Location Area Code (LAC):</Typography>
-                                        <Typography variant="body2" fontWeight="500">
-                                            {trackerData?.network?.lac || "Unknown"}
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
-                                        <Typography variant="body2" color="text.secondary">MCC / MNC:</Typography>
-                                        <Typography variant="body2" fontWeight="500">
-                                            {trackerData?.network?.mcc || "N/A"} / {trackerData?.network?.mnc || "N/A"}
-                                        </Typography>
-                                    </Box>
-
-                                    <Divider sx={{ my: 1.5 }} />
-
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                        <Typography variant="caption" color="text.secondary">Last Connected:</Typography>
-                                        <Typography variant="caption" fontWeight="500">
-                                            {formatDate(trackerData?.network?.last_updated)}
+                                            {formatDate(trackerData?.last_updated)}
                                         </Typography>
                                     </Box>
                                 </CardContent>
@@ -418,7 +323,7 @@ const TrackerPage = () => {
                                         <CellTowerIcon color="disabled" /> Hardware State
                                     </Typography>
                                     <Typography variant="body2" color="text.secondary">
-                                        Device telemetry is pushed dynamically from the ESP32-C3 microcontroller via serial commands parsing coordinates and cell network signal directly from the Quectel EC200U module.
+                                        Device telemetry is pushed dynamically from the ESP32-C3 microcontroller, posting GPS coordinates (latitude, longitude, and timestamp) directly to the server.
                                     </Typography>
                                 </CardContent>
                             </Card>
