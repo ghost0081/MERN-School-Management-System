@@ -215,7 +215,7 @@ router.post('/Copies', createCopy); // Create a library copy
 router.get('/Copies', listCopies); // ?bookId= - List copies (optionally filtered by bookId)
 
 // Tracker Endpoints
-router.post('/api/tracker/gps', deviceAuthMiddleware, updateGPS);
+router.post('/api/tracker/gps', updateGPS);
 router.get('/api/tracker/devices', getActiveDevices);
 router.get('/api/admin/:device_id', getDeviceData);
 
