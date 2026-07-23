@@ -186,10 +186,10 @@ const TrackerPage = () => {
                 <Grid container spacing={2} alignItems="center" justifyContent="space-between">
                     <Grid item xs={12} md={5}>
                         <Typography variant="h5" component="h2" fontWeight="700" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <LocationOnIcon color="primary" /> Student Tracking System (ESP32)
+                            <LocationOnIcon color="primary" /> Student Tracking System (GT06)
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            Live GPS telemetry from student wearables with in-memory server state.
+                            Live GPS telemetry from student wearables with GT06 binary protocol.
                         </Typography>
                     </Grid>
                     
@@ -323,7 +323,7 @@ const TrackerPage = () => {
                                         <CellTowerIcon color="disabled" /> Hardware State
                                     </Typography>
                                     <Typography variant="body2" color="text.secondary">
-                                        Device telemetry is pushed dynamically from the ESP32-C3 microcontroller, posting GPS coordinates (latitude, longitude, and timestamp) directly to the server.
+                                        Device telemetry is pushed dynamically from the GT06 tracker over a raw TCP socket, posting GPS coordinates (latitude, longitude, speed, and course) directly to the server.
                                     </Typography>
                                 </CardContent>
                             </Card>

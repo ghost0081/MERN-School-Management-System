@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Container, Grid, Paper, Typography, CircularProgress, Chip, Divider } from '@mui/material';
 import styled from 'styled-components';
-import { collection, onSnapshot, query, limit } from 'firebase/firestore';
-import { db } from '../../firebase';
+import axios from 'axios';
+import { useSelector } from 'react-redux';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import ExploreIcon from '@mui/icons-material/Explore';
 import TimelineIcon from '@mui/icons-material/Timeline';
@@ -43,41 +43,40 @@ const DataItem = ({ label, value, unit = '' }) => (
 );
 
 const ParentTracking = () => {
+    const { currentUser } = useSelector(state => state.user);
     const [trackerData, setTrackerData] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Query the test001 collection for the device telemetry
-        const q = query(collection(db, "test001"), limit(5));
+        let isMounted = true;
         
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            if (!snapshot.empty) {
-                // Find our specific device if multiple exist, or just take the first
-                const doc = snapshot.docs.find(d => d.data().deviceId === "MyFirstDevice") || snapshot.docs[0];
-                const rawData = doc.data();
-                
-                // FireStore Timestamps crash React if rendered directly. Sanitize all keys.
-                for (const key in rawData) {
-                   if (rawData[key] && typeof rawData[key] === 'object' && ('seconds' in rawData[key] || rawData[key].toDate)) {
-                       rawData[key] = rawData[key].toDate ? rawData[key].toDate().toLocaleString() : new Date(rawData[key].seconds * 1000).toLocaleString();
-                   } else if (rawData[key] && typeof rawData[key] === 'object') {
-                       // Deep sanitize just in case
-                       rawData[key] = JSON.stringify(rawData[key]);
-                   }
-                }
-                
-                setTrackerData(rawData);
+        const fetchTrackerData = async () => {
+            if (!currentUser?.student) {
                 setLoading(false);
-            } else {
-                setLoading(false);
+                return;
             }
-        }, (error) => {
-            console.error("Firestore Error:", error);
-            setLoading(false);
-        });
+            
+            try {
+                const response = await axios.get(`${process.env.REACT_APP_BASE_URL}/api/admin/${currentUser.student}`);
+                if (isMounted) {
+                    setTrackerData(response.data);
+                    setLoading(false);
+                }
+            } catch (error) {
+                console.error("Tracker API Error:", error);
+                if (isMounted) setLoading(false);
+            }
+        };
 
-        return () => unsubscribe();
-    }, []);
+        fetchTrackerData();
+        // Poll every 10 seconds for real-time updates
+        const intervalId = setInterval(fetchTrackerData, 10000);
+
+        return () => {
+            isMounted = false;
+            clearInterval(intervalId);
+        };
+    }, [currentUser]);
 
     if (loading) {
         return (
@@ -97,12 +96,9 @@ const ParentTracking = () => {
         );
     }
 
-    const formatDate = (dateObj) => {
-        if (!dateObj) return 'Unknown';
-        if (typeof dateObj === 'string') return dateObj;
-        if (dateObj.toDate) return dateObj.toDate().toLocaleString();
-        if (dateObj.seconds) return new Date(dateObj.seconds * 1000).toLocaleString();
-        return String(dateObj);
+    const formatDate = (dateString) => {
+        if (!dateString) return 'Unknown';
+        return new Date(dateString).toLocaleString();
     };
 
     return (
@@ -112,11 +108,11 @@ const ParentTracking = () => {
                     Live GPS Tracker
                 </Typography>
                 <Chip 
-                    icon={trackerData.online ? <LocationOnIcon /> : <WarningAmberIcon />} 
-                    label={trackerData.online ? 'Device Online' : 'Device Offline'} 
+                    icon={trackerData.status === 'Online' ? <LocationOnIcon /> : <WarningAmberIcon />} 
+                    label={trackerData.status === 'Online' ? 'Device Online' : 'Device Offline'} 
                     sx={{ 
-                        bgcolor: trackerData.online ? 'rgba(76, 175, 80, 0.1)' : 'rgba(239, 83, 80, 0.1)', 
-                        color: trackerData.online ? '#4caf50' : '#ef5350',
+                        bgcolor: trackerData.status === 'Online' ? 'rgba(76, 175, 80, 0.1)' : 'rgba(239, 83, 80, 0.1)', 
+                        color: trackerData.status === 'Online' ? '#4caf50' : '#ef5350',
                         fontWeight: 600,
                         px: 1
                     }} 
@@ -182,10 +178,10 @@ const ParentTracking = () => {
                     <StyledPaper sx={{ bgcolor: '#7B61FF', color: 'white' }}>
                         <SectionTitle sx={{ color: 'white' }}><AccessTimeIcon sx={{ color: 'white' }}/> Last Seen Sync</SectionTitle>
                         <Typography variant="body2" sx={{ opacity: 0.8, mb: 1 }}>The tracker last reported its state at:</Typography>
-                        <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>{formatDate(trackerData.lastSeen || trackerData.timestamp)}</Typography>
+                        <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>{formatDate(trackerData.last_updated)}</Typography>
                         
-                        <Typography variant="body2" sx={{ opacity: 0.8, mb: 1 }}>Last Command Executed:</Typography>
-                        <Typography variant="body1" sx={{ fontWeight: 600 }}>{trackerData.command_status || 'N/A'} ({trackerData.command_result || 'None'})</Typography>
+                        <Typography variant="body2" sx={{ opacity: 0.8, mb: 1 }}>IMEI:</Typography>
+                        <Typography variant="body1" sx={{ fontWeight: 600 }}>{trackerData.imei || 'N/A'}</Typography>
                     </StyledPaper>
                 </Grid>
                 

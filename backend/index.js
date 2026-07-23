@@ -6,6 +6,7 @@ const path = require("path")
 // const bodyParser = require("body-parser")
 const app = express()
 const Routes = require("./routes/route.js")
+const startTrackerServer = require("./tracker-server.js")
 
 const PORT = process.env.PORT || 5000
 
@@ -37,4 +38,6 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Server started at port no. ${PORT}`)
+    // Start GT06 Tracker TCP Server
+    startTrackerServer()
 })

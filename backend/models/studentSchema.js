@@ -27,6 +27,10 @@ const studentSchema = new mongoose.Schema({
         type: String,
         default: "Student"
     },
+    imei: {
+        type: String,
+        default: ""
+    },
     examResult: [
         {
             subName: {

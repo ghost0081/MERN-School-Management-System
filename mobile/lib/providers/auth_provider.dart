@@ -1,0 +1,57 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../models/user_model.dart';
+import '../services/api_service.dart';
+
+class AuthProvider with ChangeNotifier {
+  UserModel? _currentUser;
+  bool _isLoading = false;
+  String? _error;
+
+  UserModel? get currentUser => _currentUser;
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+  bool get isAuthenticated => _currentUser != null;
+
+  final ApiService _apiService = ApiService();
+
+  Future<void> login(String role, String identifier, String password, {String? studentName}) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final data = await _apiService.login(role, identifier, password, studentName: studentName);
+      _currentUser = UserModel.fromJson(data);
+      
+      // Save locally
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('userData', jsonEncode(_currentUser!.toJson()));
+      
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      _error = e.toString().replaceAll('Exception: ', '');
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  Future<void> logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('userData');
+    _currentUser = null;
+    notifyListeners();
+  }
+
+  Future<void> tryAutoLogin() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!prefs.containsKey('userData')) return;
+
+    final extractedUserData = jsonDecode(prefs.getString('userData')!) as Map<String, dynamic>;
+    _currentUser = UserModel.fromJson(extractedUserData);
+    notifyListeners();
+  }
+}
