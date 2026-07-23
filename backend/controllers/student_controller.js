@@ -270,6 +270,52 @@ const removeStudentAttendance = async (req, res) => {
     }
 };
 
+const studentAttendanceBulk = async (req, res) => {
+    const { attendanceRecords, subName, date } = req.body;
+    // attendanceRecords format: [{ studentId: "id", status: "Present" | "Absent" }]
+
+    try {
+        const subject = await Subject.findById(subName);
+        if (!subject) {
+            return res.status(404).send({ message: 'Subject not found' });
+        }
+
+        const results = [];
+        for (const record of attendanceRecords) {
+            const { studentId, status } = record;
+            const student = await Student.findById(studentId);
+
+            if (!student) continue;
+
+            // Find existing attendance for this subject on this date
+            const existingAttendance = student.attendance.find(
+                (a) =>
+                    a.date.toDateString() === new Date(date).toDateString() &&
+                    a.subName.toString() === subName
+            );
+
+            if (existingAttendance) {
+                existingAttendance.status = status;
+            } else {
+                // Check if the student has already reached the maximum number of sessions
+                const attendedSessions = student.attendance.filter(
+                    (a) => a.subName.toString() === subName
+                ).length;
+
+                if (attendedSessions < subject.sessions) {
+                    student.attendance.push({ date, status, subName });
+                }
+            }
+            await student.save();
+            results.push(student._id);
+        }
+
+        return res.send({ message: 'Bulk attendance recorded successfully', count: results.length });
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating bulk attendance', error: error.message });
+    }
+};
+
 
 module.exports = {
     studentRegister,
@@ -287,4 +333,5 @@ module.exports = {
     clearAllStudentsAttendance,
     removeStudentAttendanceBySubject,
     removeStudentAttendance,
+    studentAttendanceBulk,
 };

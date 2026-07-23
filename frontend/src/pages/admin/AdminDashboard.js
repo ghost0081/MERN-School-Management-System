@@ -56,6 +56,7 @@ import VisitorsListPage from './frontdesk/VisitorsListPage';
 import AdminUploadBooks from './libraryRelated/AdminUploadBooks';
 import LibraryBooks from './libraryRelated/LibraryBooks';
 import TrackerPage from './TrackerPage';
+import BLEAttendancePage from './BLEAttendancePage';
 
 import AddClass from './classRelated/AddClass';
 import ClassDetails from './classRelated/ClassDetails';
@@ -197,6 +198,9 @@ const AdminDashboard = () => {
 
                         {/* Tracker */}
                         <Route path="/Admin/tracker" element={<TrackerPage />} />
+
+                        {/* BLE Attendance */}
+                        <Route path="/Admin/ble-attendance" element={<BLEAttendancePage />} />
 
                         <Route path="/logout" element={<Logout />} />
                     </Routes>

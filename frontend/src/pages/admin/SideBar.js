@@ -27,6 +27,7 @@ import BadgeIcon from '@mui/icons-material/Badge';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import BluetoothIcon from '@mui/icons-material/Bluetooth';
 
 const SideBar = () => {
     const location = useLocation();
@@ -156,6 +157,12 @@ const SideBar = () => {
                         <LocationOnIcon color={location.pathname.startsWith("/Admin/tracker") ? 'primary' : 'inherit'} />
                     </ListItemIcon>
                     <ListItemText primary="Student Tracker" />
+                </ListItemButton>
+                <ListItemButton component={Link} to="/Admin/ble-attendance" selected={location.pathname.startsWith("/Admin/ble-attendance")}>
+                    <ListItemIcon>
+                        <BluetoothIcon color={location.pathname.startsWith("/Admin/ble-attendance") ? 'primary' : 'inherit'} />
+                    </ListItemIcon>
+                    <ListItemText primary="BLE Attendance" />
                 </ListItemButton>
                 <ListItemButton onClick={handleStaffClick} selected={location.pathname.startsWith("/Admin/staff") || location.pathname.startsWith("/Admin/payroll")}>
                     <ListItemIcon>
