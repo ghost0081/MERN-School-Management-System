@@ -87,7 +87,7 @@ function startTrackerServer() {
                     console.log(`Tracker Logged In: IMEI ${deviceImei}`);
 
                     // Send Login Response (0x05 is the response protocol)
-                    const serialNumber = data.slice(packetLength, packetLength + 2);
+                    const serialNumber = data.slice(data.length - 6, data.length - 4);
                     const response = Buffer.from([0x78, 0x78, 0x05, 0x01, serialNumber[0], serialNumber[1], 0x00, 0x00, 0x0D, 0x0A]);
                     
                     // Calc CRC for length, protocol, serial
@@ -132,11 +132,19 @@ function startTrackerServer() {
                     const speed = data.readUInt8(19);
                     
                     // Formula: (Value / 30000) / 60
-                    const latitude = (latBuffer / 30000.0) / 60.0;
-                    const longitude = (lonBuffer / 30000.0) / 60.0;
+                    let latitude = (latBuffer / 30000.0) / 60.0;
+                    let longitude = (lonBuffer / 30000.0) / 60.0;
 
                     const courseStatus = data.readUInt16BE(20);
                     const course = courseStatus & 0x03FF; // lower 10 bits
+                    
+                    // Extract Hemisphere signs from Course/Status (BYTE 1)
+                    const byte1 = (courseStatus >> 8) & 0xFF;
+                    const isWest = ((byte1 >> 3) & 1) === 1;
+                    const isNorth = ((byte1 >> 2) & 1) === 1;
+                    
+                    if (isWest) longitude = -longitude;
+                    if (!isNorth) latitude = -latitude;
 
                     // Update MongoDB
                     await TrackerData.findOneAndUpdate(
