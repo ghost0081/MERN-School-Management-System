@@ -33,7 +33,9 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _isLoading = false;
-      _error = e.toString().replaceAll('Exception: ', '');
+      // Strip all "Exception: " prefixes that may be nested by rethrow chains
+      _error = e.toString().replaceAll(RegExp(r'Exception:\s*'), '').trim();
+      if (_error!.isEmpty) _error = 'Login failed. Please try again.';
       notifyListeners();
       rethrow;
     }

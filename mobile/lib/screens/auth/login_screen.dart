@@ -82,7 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 24),
                     DropdownButtonFormField<String>(
-                      value: _selectedRole,
+                      value: _selectedRole, // ignore: deprecated_member_use
                       decoration: const InputDecoration(
                         labelText: 'Login as',
                         border: OutlineInputBorder(),

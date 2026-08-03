@@ -16,28 +16,40 @@ class ApiService {
     }
 
     try {
+      // Build the request body — rollNum MUST be sent as an integer because the
+      // backend MongoDB schema defines rollNum as Number. Sending a string causes
+      // Mongoose findOne to return null (no match), giving "Student not found".
+      final Map<String, dynamic> body = {};
+      if (role == 'Student' || role == 'Parent') {
+        body['rollNum'] = int.tryParse(identifier) ?? identifier;
+      } else {
+        body['email'] = identifier;
+      }
+      if (role == 'Student' && studentName != null) {
+        body['studentName'] = studentName;
+      }
+      body['password'] = password;
+
       final response = await http.post(
         Uri.parse(endpoint),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          if (role == 'Student' || role == 'Parent') 'rollNum': identifier else 'email': identifier,
-          if (role == 'Student' && studentName != null) 'studentName': studentName,
-          'password': password,
-        }),
+        body: jsonEncode(body),
       );
 
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        if (data is Map && data.containsKey('message')) {
+        // A valid user response always has an '_id' field.
+        // A backend error response has 'message' but NO '_id'.
+        if (data is Map && data.containsKey('message') && !data.containsKey('_id')) {
           throw Exception(data['message']);
         }
-        return data; // Usually returns user object and token
+        return Map<String, dynamic>.from(data);
       } else {
-        throw Exception(data['message'] ?? 'Login failed');
+        throw Exception(data['message'] ?? 'Login failed (status ${response.statusCode})');
       }
     } catch (e) {
-      throw Exception(e.toString());
+      rethrow;
     }
   }
 

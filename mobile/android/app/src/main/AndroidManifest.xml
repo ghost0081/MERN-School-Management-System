@@ -1,8 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- INTERNET permission is required for all HTTP/socket calls -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:label="mobile"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:networkSecurityConfig="@xml/network_security_config">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -43,3 +47,4 @@
         </intent>
     </queries>
 </manifest>
+

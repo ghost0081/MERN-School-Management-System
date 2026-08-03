@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!--
+        Allow cleartext HTTP traffic to the school CRM server (HTTP only, no HTTPS).
+        This is required because Android 9+ (API 28+) blocks cleartext traffic by default.
+        Scoped to the specific server IP to minimise exposure.
+    -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">200.141.9.19</domain>
+    </domain-config>
+</network-security-config>

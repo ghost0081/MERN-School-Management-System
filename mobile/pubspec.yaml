@@ -53,6 +53,14 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+# Pin JNI-dependent plugins to versions compatible with Flutter 3.44.7 / Dart 3.12.2.
+# path_provider_android 2.3.x and shared_preferences_android 2.4.x use a new JNI API
+# (JObject, JString, jNullReference) that is not available in the jni package shipped
+# with this Flutter version. Pinning to 2.2.x / 2.3.x uses the stable platform channel API.
+dependency_overrides:
+  path_provider_android: 2.2.12
+  shared_preferences_android: 2.3.4
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
