@@ -2,10 +2,7 @@ import 'package:flutter/foundation.dart';
 
 class Config {
   static String get baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:5000';
-    }
-    return 'http://10.0.2.2:5000';
+    return 'http://200.141.9.19:5000';
   }
   
   // API endpoints

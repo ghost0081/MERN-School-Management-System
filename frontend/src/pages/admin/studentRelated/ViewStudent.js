@@ -3,7 +3,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { deleteUser, getUserDetails, updateUser } from '../../../redux/userRelated/userHandle';
 import { useNavigate, useParams } from 'react-router-dom'
 import { getSubjectList } from '../../../redux/sclassRelated/sclassHandle';
-import { Box, Button, Collapse, IconButton, Table, TableBody, TableHead, Typography, Tab, Paper, BottomNavigation, BottomNavigationAction, Container } from '@mui/material';
+import { Box, Button, Collapse, IconButton, Table, TableBody, TableHead, Typography, Tab, Paper, BottomNavigation, BottomNavigationAction, Container, Card, CardContent, TextField, Chip, Divider, Stack } from '@mui/material';
+import axios from 'axios';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
@@ -340,8 +341,84 @@ const ViewStudent = () => {
     }
 
     const StudentDetailsSection = () => {
+        const [bleImei, setBleImei] = useState(userDetails.imei || '');
+
+        const handleAllotBle = async () => {
+            try {
+                await axios.put(`${process.env.REACT_APP_BASE_URL}/Student/${studentID}`, { imei: bleImei });
+                dispatch(getUserDetails(studentID, address));
+                alert(`Wearable ${bleImei ? bleImei : 'removed'} successfully allotted to ${userDetails.name}!`);
+            } catch (err) {
+                console.error("Error allotting BLE:", err);
+                alert("Failed to allot BLE wearable.");
+            }
+        };
+
         return (
             <div>
+                <Card sx={{ mb: 3, p: 2, borderRadius: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.05)', border: '1px solid #e0e0e0' }}>
+                    <CardContent>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#1a237e', mb: 1 }}>
+                            Hardware BLE / GPS Wearable Allotment
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            Assign a physical hardware wearable device (IMEI / BLE ID) to track this student's real-time safety and location.
+                        </Typography>
+                        
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+                            <Chip
+                                label={`Current Status: ${userDetails.imei ? 'Allotted (' + userDetails.imei + ')' : 'No Wearable Allotted'}`}
+                                color={userDetails.imei ? "success" : "default"}
+                                sx={{ fontWeight: 'bold' }}
+                            />
+                            {userDetails.imei && (
+                                <Button
+                                    variant="outlined"
+                                    color="primary"
+                                    size="small"
+                                    onClick={() => navigate('/Admin/tracker')}
+                                >
+                                    Live Track on Map
+                                </Button>
+                            )}
+                        </Box>
+
+                        <Divider sx={{ my: 2 }} />
+
+                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+                            <TextField
+                                label="Wearable IMEI / BLE ID"
+                                size="small"
+                                value={bleImei}
+                                onChange={(e) => setBleImei(e.target.value)}
+                                placeholder="e.g. 864163085084979"
+                                sx={{ minWidth: 260 }}
+                            />
+                            <Button
+                                variant="contained"
+                                color="success"
+                                onClick={handleAllotBle}
+                                sx={{ fontWeight: 'bold' }}
+                            >
+                                {userDetails.imei ? "Update Allotment" : "Allot Wearable"}
+                            </Button>
+                            {userDetails.imei && (
+                                <Button
+                                    variant="outlined"
+                                    color="error"
+                                    onClick={() => {
+                                        setBleImei('');
+                                        axios.put(`${process.env.REACT_APP_BASE_URL}/Student/${studentID}`, { imei: '' })
+                                            .then(() => dispatch(getUserDetails(studentID, address)));
+                                    }}
+                                >
+                                    Remove
+                                </Button>
+                            )}
+                        </Box>
+                    </CardContent>
+                </Card>
+
                 Name: {userDetails.name}
                 <br />
                 Roll Number: {userDetails.rollNum}

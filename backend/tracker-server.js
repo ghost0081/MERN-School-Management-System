@@ -62,6 +62,83 @@ function parseIMEI(buffer) {
     return imei;
 }
 
+// Parse Login Packet (0x01)
+function parseLoginPacket(data) {
+    const imeiBuffer = data.slice(4, 12);
+    const parsedImei = parseIMEI(imeiBuffer);
+    if (!/^\d{15}$/.test(parsedImei)) {
+        return { valid: false, error: 'Invalid IMEI format' };
+    }
+    const serialNumber = data.slice(data.length - 6, data.length - 4);
+    const response = Buffer.from([0x78, 0x78, 0x05, 0x01, serialNumber[0], serialNumber[1], 0x00, 0x00, 0x0D, 0x0A]);
+    const crcBuf = Buffer.from([0x05, 0x01, serialNumber[0], serialNumber[1]]);
+    const crc = getCrc16(crcBuf);
+    response.writeUInt16BE(crc, 6);
+    return { valid: true, imei: parsedImei, response };
+}
+
+// Parse Heartbeat Packet (0x13)
+function parseHeartbeatPacket(data) {
+    const voltageLevel = data[5];
+    const voltageMap = {
+        0x06: 100,
+        0x05: 85,
+        0x04: 70,
+        0x03: 50,
+        0x02: 25,
+        0x01: 10,
+        0x00: 0
+    };
+    const battery = voltageMap[voltageLevel] !== undefined ? voltageMap[voltageLevel] : 100;
+    const serialNumber = data.slice(data.length - 6, data.length - 4);
+    const response = Buffer.from([0x78, 0x78, 0x05, 0x13, serialNumber[0], serialNumber[1], 0x00, 0x00, 0x0D, 0x0A]);
+    const crcBuf = Buffer.from([0x05, 0x13, serialNumber[0], serialNumber[1]]);
+    const crc = getCrc16(crcBuf);
+    response.writeUInt16BE(crc, 6);
+    return { valid: true, battery, response };
+}
+
+// Parse Location Packet (0x12)
+function parseLocationPacket(data) {
+    // Extract UTC Date/Time from bytes 4 to 9
+    const year = 2000 + data[4];
+    const month = data[5] - 1; // JS months are 0-indexed
+    const day = data[6];
+    const hour = data[7];
+    const minute = data[8];
+    const second = data[9];
+    const gpsTimestamp = new Date(Date.UTC(year, month, day, hour, minute, second));
+
+    const latBuffer = data.readUInt32BE(11);
+    const lonBuffer = data.readUInt32BE(15);
+    const speed = data.readUInt8(19);
+
+    let latitude = (latBuffer / 30000.0) / 60.0;
+    let longitude = (lonBuffer / 30000.0) / 60.0;
+
+    const courseStatus = data.readUInt16BE(20);
+    const course = courseStatus & 0x03FF; // lower 10 bits
+
+    // Extract Hemisphere signs & GPS fix status from Course/Status (BYTE 1)
+    const byte1 = (courseStatus >> 8) & 0xFF;
+    const isGpsValid = ((byte1 >> 4) & 1) === 1;
+    const isWest = ((byte1 >> 3) & 1) === 1;
+    const isNorth = ((byte1 >> 2) & 1) === 1;
+
+    if (isWest) longitude = -longitude;
+    if (!isNorth) latitude = -latitude;
+
+    return {
+        valid: true,
+        gpsTimestamp: !isNaN(gpsTimestamp.getTime()) ? gpsTimestamp : new Date(),
+        latitude,
+        longitude,
+        speed,
+        course,
+        isGpsValid
+    };
+}
+
 function startTrackerServer() {
     const server = net.createServer((socket) => {
         let deviceImei = null;
@@ -76,26 +153,20 @@ function startTrackerServer() {
                 // Check Start Bits 0x78 0x78
                 if (data[0] !== 0x78 || data[1] !== 0x78) return;
 
-                const packetLength = data[2];
                 const protocolNumber = data[3];
 
                 // Login Packet (0x01)
                 if (protocolNumber === 0x01) {
-                    const imeiBuffer = data.slice(4, 12);
-                    deviceImei = parseIMEI(imeiBuffer);
+                    const parsed = parseLoginPacket(data);
+                    if (!parsed.valid) {
+                        console.warn(`Tracker Login failed: ${parsed.error}`);
+                        return;
+                    }
+                    deviceImei = parsed.imei;
                     activeDevices[deviceImei] = socket;
                     console.log(`Tracker Logged In: IMEI ${deviceImei}`);
 
-                    // Send Login Response (0x05 is the response protocol)
-                    const serialNumber = data.slice(data.length - 6, data.length - 4);
-                    const response = Buffer.from([0x78, 0x78, 0x05, 0x01, serialNumber[0], serialNumber[1], 0x00, 0x00, 0x0D, 0x0A]);
-                    
-                    // Calc CRC for length, protocol, serial
-                    const crcBuf = Buffer.from([0x05, 0x01, serialNumber[0], serialNumber[1]]);
-                    const crc = getCrc16(crcBuf);
-                    response.writeUInt16BE(crc, 6);
-                    
-                    socket.write(response);
+                    socket.write(parsed.response);
                     
                     // Upsert default tracker state if not exists
                     await TrackerData.findOneAndUpdate(
@@ -108,16 +179,12 @@ function startTrackerServer() {
                 // Heartbeat / Status Packet (0x13)
                 else if (protocolNumber === 0x13) {
                     if (deviceImei) {
-                        const serialNumber = data.slice(data.length - 6, data.length - 4);
-                        const response = Buffer.from([0x78, 0x78, 0x05, 0x13, serialNumber[0], serialNumber[1], 0x00, 0x00, 0x0D, 0x0A]);
-                        const crcBuf = Buffer.from([0x05, 0x13, serialNumber[0], serialNumber[1]]);
-                        const crc = getCrc16(crcBuf);
-                        response.writeUInt16BE(crc, 6);
-                        socket.write(response);
+                        const parsed = parseHeartbeatPacket(data);
+                        socket.write(parsed.response);
                         
                         await TrackerData.findOneAndUpdate(
                             { imei: deviceImei },
-                            { last_updated: new Date(), status: 'Online' }
+                            { last_updated: new Date(), status: 'Online', battery: parsed.battery }
                         );
                     }
                 }
@@ -126,41 +193,38 @@ function startTrackerServer() {
                 else if (protocolNumber === 0x12) {
                     if (!deviceImei) return;
 
-                    // Parse Latitude and Longitude
-                    const latBuffer = data.readUInt32BE(11);
-                    const lonBuffer = data.readUInt32BE(15);
-                    const speed = data.readUInt8(19);
-                    
-                    // Formula: (Value / 30000) / 60
-                    let latitude = (latBuffer / 30000.0) / 60.0;
-                    let longitude = (lonBuffer / 30000.0) / 60.0;
+                    const parsed = parseLocationPacket(data);
 
-                    const courseStatus = data.readUInt16BE(20);
-                    const course = courseStatus & 0x03FF; // lower 10 bits
-                    
-                    // Extract Hemisphere signs from Course/Status (BYTE 1)
-                    const byte1 = (courseStatus >> 8) & 0xFF;
-                    const isWest = ((byte1 >> 3) & 1) === 1;
-                    const isNorth = ((byte1 >> 2) & 1) === 1;
-                    
-                    if (isWest) longitude = -longitude;
-                    if (!isNorth) latitude = -latitude;
+                    const updatePayload = {
+                        speed: parsed.speed, 
+                        course: parsed.course,
+                        last_updated: parsed.gpsTimestamp,
+                        status: 'Online'
+                    };
+
+                    if (parsed.isGpsValid) {
+                        updatePayload.latitude = parsed.latitude;
+                        updatePayload.longitude = parsed.longitude;
+                    }
+
+                    const mongoUpdate = { $set: updatePayload };
+                    if (parsed.isGpsValid && parsed.latitude !== 0 && parsed.longitude !== 0) {
+                        mongoUpdate.$push = {
+                            path_history: {
+                                $each: [{ lat: parsed.latitude, lng: parsed.longitude, timestamp: parsed.gpsTimestamp }],
+                                $slice: -500 // Keep last 500 coordinates
+                            }
+                        };
+                    }
 
                     // Update MongoDB
                     await TrackerData.findOneAndUpdate(
                         { imei: deviceImei },
-                        { 
-                            latitude, 
-                            longitude, 
-                            speed, 
-                            course,
-                            last_updated: new Date(),
-                            status: 'Online'
-                        },
+                        mongoUpdate,
                         { upsert: true }
                     );
                     
-                    console.log(`Tracker Location Updated: IMEI ${deviceImei} - Lat: ${latitude}, Lon: ${longitude}`);
+                    console.log(`Tracker Location Updated: IMEI ${deviceImei} - Lat: ${parsed.latitude}, Lon: ${parsed.longitude}, ValidFix: ${parsed.isGpsValid}`);
                 }
             } catch (err) {
                 console.error("GT06 Parsing Error:", err);
@@ -190,5 +254,11 @@ function startTrackerServer() {
         console.log(`GT06 TCP Tracker Server listening on port ${PORT}`);
     });
 }
+
+startTrackerServer.parseIMEI = parseIMEI;
+startTrackerServer.getCrc16 = getCrc16;
+startTrackerServer.parseLoginPacket = parseLoginPacket;
+startTrackerServer.parseHeartbeatPacket = parseHeartbeatPacket;
+startTrackerServer.parseLocationPacket = parseLocationPacket;
 
 module.exports = startTrackerServer;

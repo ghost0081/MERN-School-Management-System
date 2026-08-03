@@ -31,6 +31,13 @@ const studentSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
+    geofence: {
+        lat: { type: Number, default: 0 },
+        lng: { type: Number, default: 0 },
+        radius: { type: Number, default: 500 }, // Radius in meters
+        name: { type: String, default: "Safe Zone" },
+        enabled: { type: Boolean, default: false }
+    },
     examResult: [
         {
             subName: {

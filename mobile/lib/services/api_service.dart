@@ -153,6 +153,23 @@ class ApiService {
     throw Exception('Invalid response format');
   }
 
+  Future<Map<String, dynamic>> updateGeofence(String studentId, Map<String, dynamic> geofence) async {
+    try {
+      final response = await http.put(
+        Uri.parse('${Config.baseUrl}/api/student/$studentId/geofence'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(geofence),
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to update geofence');
+      }
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
   Future<void> createComplain(String user, String date, String complaint, String school) async {
     try {
       final response = await http.post(

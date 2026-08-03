@@ -33,7 +33,12 @@ const trackerSchema = new mongoose.Schema({
     last_updated: {
         type: Date,
         default: Date.now
-    }
+    },
+    path_history: [{
+        lat: Number,
+        lng: Number,
+        timestamp: { type: Date, default: Date.now }
+    }]
 }, { timestamps: true });
 
 module.exports = mongoose.model("tracker", trackerSchema);

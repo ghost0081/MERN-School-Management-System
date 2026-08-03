@@ -158,13 +158,21 @@ const TrackerPage = () => {
             markerRef.current.getPopup().setContent(`<b>Device: ${trackerData.device_id}</b><br/>Time: ${formatDate(trackerData.last_updated)}`);
         }
 
-        // Add coordinate to polyline trail
-        const history = pathHistoryRef.current;
-        const lastCoord = history[history.length - 1];
-        if (!lastCoord || lastCoord[0] !== lat || lastCoord[1] !== lng) {
-            history.push(latlng);
+        // Use database path_history if available, otherwise append coordinate to polyline trail
+        if (trackerData.path_history && trackerData.path_history.length > 0) {
+            const fullTrail = trackerData.path_history.map(pt => [pt.lat, pt.lng]);
+            pathHistoryRef.current = fullTrail;
             if (polylineRef.current) {
-                polylineRef.current.setLatLngs(history);
+                polylineRef.current.setLatLngs(fullTrail);
+            }
+        } else {
+            const history = pathHistoryRef.current;
+            const lastCoord = history[history.length - 1];
+            if (!lastCoord || lastCoord[0] !== lat || lastCoord[1] !== lng) {
+                history.push(latlng);
+                if (polylineRef.current) {
+                    polylineRef.current.setLatLngs(history);
+                }
             }
         }
 
@@ -319,11 +327,48 @@ const TrackerPage = () => {
                         <Grid item xs={12}>
                             <Card sx={{ borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
                                 <CardContent sx={{ p: 3 }}>
-                                    <Typography variant="h6" fontWeight="600" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                                        <CellTowerIcon color="disabled" /> Hardware State
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Device telemetry is pushed dynamically from the GT06 tracker over a raw TCP socket, posting GPS coordinates (latitude, longitude, speed, and course) directly to the server.
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                                        <Typography variant="h6" fontWeight="600" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <CellTowerIcon color="primary" /> Hardware State
+                                        </Typography>
+                                        <Box sx={{
+                                            px: 1.5,
+                                            py: 0.5,
+                                            borderRadius: '12px',
+                                            backgroundColor: trackerData?.status === 'Online' ? '#E8F5E9' : '#FFEBEE',
+                                            color: trackerData?.status === 'Online' ? '#2E7D32' : '#C62828',
+                                            fontWeight: '700',
+                                            fontSize: '0.75rem'
+                                        }}>
+                                            {trackerData?.status || 'Offline'}
+                                        </Box>
+                                    </Box>
+
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                        <Typography variant="body2" color="text.secondary">Battery Level:</Typography>
+                                        <Typography variant="body2" fontWeight="600" sx={{
+                                            color: (trackerData?.battery ?? 0) > 25 ? '#2E7D32' : '#C62828'
+                                        }}>
+                                            {trackerData?.battery !== undefined ? `${trackerData.battery}%` : '100%'}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                        <Typography variant="body2" color="text.secondary">Speed:</Typography>
+                                        <Typography variant="body2" fontWeight="500">
+                                            {trackerData?.speed !== undefined ? `${trackerData.speed} km/h` : '0 km/h'}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1.5 }}>
+                                        <Typography variant="body2" color="text.secondary">Course / Heading:</Typography>
+                                        <Typography variant="body2" fontWeight="500">
+                                            {trackerData?.course !== undefined ? `${trackerData.course}°` : '0°'}
+                                        </Typography>
+                                    </Box>
+
+                                    <Divider sx={{ my: 1.5 }} />
+
+                                    <Typography variant="caption" color="text.secondary">
+                                        Live GT06 binary protocol telemetry streamed over TCP/UDP Port 5023.
                                     </Typography>
                                 </CardContent>
                             </Card>

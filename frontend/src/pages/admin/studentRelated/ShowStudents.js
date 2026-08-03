@@ -4,13 +4,14 @@ import { useNavigate } from "react-router-dom";
 import { getAllStudents } from '../../../redux/studentRelated/studentHandle';
 import { deleteUser } from '../../../redux/userRelated/userHandle';
 import {
-    Paper, Box, IconButton
+    Paper, Box, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField, Typography, Chip
 } from '@mui/material';
 import PersonRemoveIcon from '@mui/icons-material/PersonRemove';
 import { BlackButton, BlueButton, GreenButton } from '../../../components/buttonStyles';
 import TableTemplate from '../../../components/TableTemplate';
 import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
 import SpeedDialTemplate from '../../../components/SpeedDialTemplate';
+import axios from 'axios';
 
 import * as React from 'react';
 import Button from '@mui/material/Button';
@@ -41,6 +42,8 @@ const ShowStudents = () => {
 
     const [showPopup, setShowPopup] = React.useState(false);
     const [message, setMessage] = React.useState("");
+    const [allotStudent, setAllotStudent] = React.useState(null);
+    const [allotImei, setAllotImei] = React.useState('');
 
     const deleteHandler = (deleteID, address) => {
         console.log(deleteID);
@@ -58,6 +61,7 @@ const ShowStudents = () => {
         { id: 'name', label: 'Name', minWidth: 170 },
         { id: 'rollNum', label: 'Roll Number', minWidth: 100 },
         { id: 'sclassName', label: 'Class', minWidth: 170 },
+        { id: 'imeiDisplay', label: 'Allotted BLE/Wearable', minWidth: 180 },
     ]
 
     const studentRows = studentsList && studentsList.length > 0 && studentsList.map((student) => {
@@ -65,6 +69,8 @@ const ShowStudents = () => {
             name: student.name,
             rollNum: student.rollNum,
             sclassName: student.sclassName.sclassName,
+            imeiDisplay: student.imei ? `BLE: ${student.imei}` : "Not Allotted",
+            rawImei: student.imei || "",
             id: student._id,
         };
     })
@@ -117,6 +123,13 @@ const ShowStudents = () => {
                     onClick={() => navigate("/Admin/students/student/" + row.id)}>
                     View
                 </BlueButton>
+                <GreenButton variant="contained"
+                    onClick={() => {
+                        setAllotStudent(row);
+                        setAllotImei(row.rawImei || '864163085084979');
+                    }}>
+                    Allot BLE
+                </GreenButton>
                 <React.Fragment>
                     <ButtonGroup variant="contained" ref={anchorRef} aria-label="split button">
                         <Button onClick={handleClick}>{options[selectedIndex]}</Button>
@@ -206,6 +219,43 @@ const ShowStudents = () => {
                     }
                 </>
             }
+            <Dialog open={Boolean(allotStudent)} onClose={() => setAllotStudent(null)} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ fontWeight: 'bold', color: '#1a237e' }}>
+                    Allot Hardware BLE / Tracker Wearable
+                </DialogTitle>
+                <DialogContent>
+                    <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Typography variant="body1">
+                            Assigning BLE / Wearable to Student: <b>{allotStudent?.name}</b> (Roll #{allotStudent?.rollNum})
+                        </Typography>
+                        <TextField
+                            label="Wearable IMEI / BLE ID"
+                            fullWidth
+                            value={allotImei}
+                            onChange={(e) => setAllotImei(e.target.value)}
+                            helperText="Enter the hardware IMEI (e.g. 864163085084979) or leave empty to remove."
+                        />
+                    </Box>
+                </DialogContent>
+                <DialogActions sx={{ p: 2 }}>
+                    <Button onClick={() => setAllotStudent(null)}>Cancel</Button>
+                    <GreenButton variant="contained" onClick={async () => {
+                        try {
+                            await axios.put(`${process.env.REACT_APP_BASE_URL}/Student/${allotStudent.id}`, { imei: allotImei });
+                            setAllotStudent(null);
+                            dispatch(getAllStudents(currentUser._id));
+                            setMessage("BLE / Wearable allotted successfully!");
+                            setShowPopup(true);
+                        } catch(err) {
+                            console.error(err);
+                            setMessage("Failed to allot BLE wearable.");
+                            setShowPopup(true);
+                        }
+                    }}>
+                        Save Allotment
+                    </GreenButton>
+                </DialogActions>
+            </Dialog>
             <Popup message={message} setShowPopup={setShowPopup} showPopup={showPopup} />
         </>
     );
