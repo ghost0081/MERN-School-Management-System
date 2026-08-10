@@ -156,6 +156,63 @@ const ClassFeesPage = () => {
         setSelectedStudentAmount(0);
     };
 
+    const handlePrintReceipt = (item) => {
+        const studentName = item.student?.name || 'Student';
+        const rollNum = item.student?.rollNum || 'N/A';
+        const amount = item.fee?.amount || 0;
+        const date = item.lastPaidDate ? new Date(item.lastPaidDate).toLocaleDateString() : new Date().toLocaleDateString();
+        const receiptNo = `REC-${Math.floor(100000 + Math.random() * 900000)}`;
+
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) return;
+
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Fee Receipt - ${receiptNo}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 40px; color: #1e293b; }
+                        .receipt-box { border: 2px solid #6366f1; padding: 30px; border-radius: 12px; max-width: 600px; margin: 0 auto; }
+                        .header { text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 20px; }
+                        .header h1 { margin: 0; color: #4f46e5; font-size: 24px; }
+                        .header p { margin: 5px 0 0 0; color: #64748b; font-size: 14px; }
+                        .row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; }
+                        .label { color: #64748b; font-weight: bold; }
+                        .value { font-weight: bold; }
+                        .total-box { background: #f1f5f9; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: right; }
+                        .total-amount { font-size: 22px; color: #10b981; font-weight: bold; }
+                        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #94a3b8; }
+                    </style>
+                </head>
+                <body>
+                    <div class="receipt-box">
+                        <div class="header">
+                            <h1>SCHOOL MANAGEMENT SYSTEM</h1>
+                            <p>Official Fee Payment Receipt</p>
+                        </div>
+                        <div class="row"><span class="label">Receipt No:</span><span class="value">${receiptNo}</span></div>
+                        <div class="row"><span class="label">Payment Date:</span><span class="value">${date}</span></div>
+                        <div class="row"><span class="label">Student Name:</span><span class="value">${studentName}</span></div>
+                        <div class="row"><span class="label">Roll Number:</span><span class="value">${rollNum}</span></div>
+                        <div class="row"><span class="label">Billing Month:</span><span class="value">${selectedMonth}</span></div>
+                        <div class="row"><span class="label">Payment Status:</span><span class="value" style="color: #10b981;">PAID</span></div>
+                        <div class="total-box">
+                            <span class="label">Total Paid Amount: </span>
+                            <span class="total-amount">₹${amount.toLocaleString()}</span>
+                        </div>
+                        <div class="footer">
+                            <p>Thank you for your payment. Computer-generated receipt, no signature required.</p>
+                        </div>
+                    </div>
+                    <script>
+                        window.onload = function() { window.print(); }
+                    </script>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+    };
+
     if (loading && !feesList.length) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
@@ -316,15 +373,25 @@ const ClassFeesPage = () => {
                                             </TableCell>
                                             <TableCell align="center">
                                                 {status === 'Paid' ? (
-                                                    <Button
-                                                        variant="outlined"
-                                                        color="error"
-                                                        onClick={() => handleStatusChange(item.student._id, status, null, amount)}
-                                                        disabled={loading}
-                                                        size="small"
-                                                    >
-                                                        Mark as Unpaid
-                                                    </Button>
+                                                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                                                        <Button
+                                                            variant="outlined"
+                                                            color="error"
+                                                            onClick={() => handleStatusChange(item.student._id, status, null, amount)}
+                                                            disabled={loading}
+                                                            size="small"
+                                                        >
+                                                            Mark as Unpaid
+                                                        </Button>
+                                                        <Button
+                                                            variant="outlined"
+                                                            color="primary"
+                                                            onClick={() => handlePrintReceipt(item)}
+                                                            size="small"
+                                                        >
+                                                            Receipt
+                                                        </Button>
+                                                    </Box>
                                                 ) : (
                                                     <Button
                                                         variant="contained"

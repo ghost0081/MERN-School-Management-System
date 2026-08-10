@@ -35,6 +35,17 @@ const getDeviceData = async (req, res) => {
             });
         }
 
+        // Check if tracker is actually online by checking last_updated timestamp.
+        // If last_updated is older than 2 minutes (120 seconds) or is null, mark status as Offline.
+        const now = new Date();
+        const lastUpdated = data.last_updated ? new Date(data.last_updated) : null;
+        if (!lastUpdated || (now.getTime() - lastUpdated.getTime() > 2 * 60 * 1000)) {
+            data.status = 'Offline';
+            TrackerData.updateOne({ _id: data._id }, { $set: { status: 'Offline' } }).catch(() => {});
+        } else {
+            data.status = 'Online';
+        }
+
         data.geofence = studentGeofence;
         return res.status(200).json(data);
     } catch (err) {
@@ -45,7 +56,11 @@ const getDeviceData = async (req, res) => {
 // Retrieve all active devices stored in memory
 const getActiveDevices = async (req, res) => {
     try {
-        const devices = await TrackerData.find({}, 'imei status latitude longitude last_updated').lean();
+        const now = new Date();
+        const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000);
+        const devices = await TrackerData.find({
+            last_updated: { $gte: twoMinutesAgo }
+        }, 'imei status latitude longitude last_updated').lean();
         const deviceIds = devices.map(d => d.imei);
         return res.status(200).json(deviceIds);
     } catch (err) {

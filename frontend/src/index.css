@@ -1,6 +1,33 @@
-* {
-  font-family: 'Poppins', sans-serif;
+/*
+ * Global stylesheet — School Management System
+ *
+ * Philosophy: This file handles only what MUI cannot:
+ *   1. Font import + body reset
+ *   2. CSS custom properties (design tokens)
+ *   3. Global scrollbar styling
+ *   4. Reduced-motion safety net
+ *   5. Print styles
+ *
+ * Everything else belongs in theme.js or component-level sx props.
+ * Do NOT add component-specific styles here.
+ */
+
+/* ─── Reset ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
   margin: 0;
+}
+
+html, body {
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+#root {
+  height: 100%;
+  isolation: isolate; /* Creates a new stacking context — prevents z-index bleed */
 }
 
 a {
@@ -8,129 +35,73 @@ a {
   color: inherit;
 }
 
-/* Prevent body scroll when in dashboard - dashboards handle their own scrolling */
-html, body {
-  margin: 0;
-  padding: 0;
-}
-
-#root {
-  height: 100vh;
-  overflow: hidden;
-}
-
-/* Global scrollbar styling for better UX */
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+/* Thin, modern scrollbar that doesn't compete with content */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 10px;
+  background: #CBD5E1;
+  border-radius: 99px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #94A3B8;
 }
 
-/* Dark mode scrollbar */
-@media (prefers-color-scheme: dark) {
-  ::-webkit-scrollbar-track {
-    background: #2a2a2a;
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E1 transparent;
+}
+
+/* ─── Motion Preferences ─────────────────────────────────────────────────── */
+/*
+ * This is the global safety net for prefers-reduced-motion.
+ * Component-level transitions should also check this via the MUI
+ * theme, but this ensures no animation runs for affected users.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
+}
 
-  ::-webkit-scrollbar-thumb {
-    background: #555;
+/* ─── Focus Ring ─────────────────────────────────────────────────────────── */
+/*
+ * We use :focus-visible (not :focus) so keyboard users see rings
+ * but mouse users don't get them on every click.
+ * The MuiCssBaseline override in theme.js removes MUI's outline
+ * and this rule restores it properly.
+ */
+:focus-visible {
+  outline: 2px solid var(--color-primary, #6C63FF);
+  outline-offset: 2px;
+}
+
+/* Remove focus ring for elements that have their own MUI focus style */
+.MuiButtonBase-root:focus-visible {
+  outline: none; /* MUI handles its own :focus-visible via styleOverrides */
+}
+
+/* ─── Print ──────────────────────────────────────────────────────────────── */
+@media print {
+  /* Hide navigation on print */
+  nav, aside, .MuiDrawer-root, .MuiAppBar-root {
+    display: none !important;
   }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: #777;
-  }
-}
-
-:root {
-  --color-bg: #1f1f38;
-  --color-bg-variant: #2c2c6c;
-  --color-primary: #4db5ff;
-  --color-primary-variant: rgba(77, 181, 255, 0.4);
-  --color-light: rgba(255, 255, 255, 0.6);
-}
-
-/* FORM */
-.register {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  /* color: #ffffff; */
-  /* background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("https://images.unsplash.com/photo-1510936111840-65e151ad71bb?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=890&q=80"); */
-  /* background-color: var(--color-bg);
-  background-size: cover;
-  background-blend-mode: darken; */
-  font-family: "Josefin Sans", sans-serif;
-}
-
-.registerTitle {
-  font-size: 50px;
-}
-
-.registerForm {
-  margin-top: -50px;
-  display: flex;
-  flex-direction: column;
-}
-
-.registerForm>label {
-  margin: 10px 0;
-  color: rgb(0, 0, 0);
-}
-
-.registerInput {
-  padding: 10px;
-  background-color: white;
-  border: none;
-  border-radius: 10px;
-}
-
-.registerInput:focus {
-  outline: none;
-}
-
-.registerButton {
-  margin-top: 20px;
-  cursor: pointer;
-  background-color: #000000;
-  color: white;
-  padding: 10px;
-  border: none;
-  border-radius: 10px;
-  text-align: center;
-}
-
-.registerButton:hover {
-  background-color: #313131;
-}
-
-@media screen and (max-width: 480px) {
-  .register {
-    background-position: right;
-  }
-
-  .registerInput {
-    font-size: 15px;
-    padding: 15px;
-    border-radius: 8px;
-  }
-
-  .registerButton {
-    font-size: 16px;
-    padding: 20px;
-    border-radius: 12px;
+  
+  main, [role="main"] {
+    margin: 0 !important;
+    padding: 0 !important;
   }
 }

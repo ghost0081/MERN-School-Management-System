@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../services/api_service.dart';
+import '../../theme.dart';
+import '../../widgets/premium_card.dart';
+import '../../widgets/page_header.dart';
 
 class TeacherComplain extends StatefulWidget {
   const TeacherComplain({super.key});
@@ -21,7 +24,6 @@ class _TeacherComplainState extends State<TeacherComplain> {
     if (!_formKey.currentState!.validate()) return;
     
     setState(() => _isSubmitting = true);
-    
     final user = Provider.of<AuthProvider>(context, listen: false).currentUser;
     
     try {
@@ -33,14 +35,17 @@ class _TeacherComplainState extends State<TeacherComplain> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Complain Submitted')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Complaint Submitted'),
+          backgroundColor: Color(0xFF10B981),
+        ));
         _titleController.clear();
         _descController.clear();
-        setState(() {}); // Refresh list
+        setState(() {});
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: const Color(0xFFEF4444)));
       }
     } finally {
       if (mounted) {
@@ -53,87 +58,121 @@ class _TeacherComplainState extends State<TeacherComplain> {
   Widget build(BuildContext context) {
     final user = Provider.of<AuthProvider>(context).currentUser;
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24.0),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Submission Form
-          Card(
-            elevation: 3,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('New Complain', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 10),
-                    TextFormField(
-                      controller: _titleController,
-                      decoration: const InputDecoration(labelText: 'Title', border: OutlineInputBorder()),
-                      validator: (val) => val!.isEmpty ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 10),
-                    TextFormField(
-                      controller: _descController,
-                      maxLines: 3,
-                      decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
-                      validator: (val) => val!.isEmpty ? 'Required' : null,
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _isSubmitting ? null : _submitComplain,
-                        child: _isSubmitting ? const CircularProgressIndicator() : const Text('Submit Complain'),
+          const PageHeader(
+            title: 'Teacher Feedback & Issue Escalation',
+            subtitle: 'Submit official issues or feedback directly to administration.',
+          ),
+
+          PremiumCard(
+            padding: const EdgeInsets.all(20),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('New Complaint', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _titleController,
+                    decoration: const InputDecoration(labelText: 'Title / Subject'),
+                    validator: (val) => val!.isEmpty ? 'Title is required' : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _descController,
+                    maxLines: 3,
+                    decoration: const InputDecoration(labelText: 'Description / Details'),
+                    validator: (val) => val!.isEmpty ? 'Description is required' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _isSubmitting ? null : _submitComplain,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
+                      child: _isSubmitting
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : const Text('Submit Complaint', style: TextStyle(fontWeight: FontWeight.w700)),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 20),
-          const Align(
-            alignment: Alignment.centerLeft,
-            child: Text('Previous Complains', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          ),
-          const SizedBox(height: 10),
-          // List of Complains
-          Expanded(
-            child: FutureBuilder<List<dynamic>>(
-              future: ApiService().getComplains(user?.schoolId ?? ''),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No complains found.'));
-                }
+          const SizedBox(height: 24),
 
-                // Filter for this user only if needed, but backend usually returns school complains. 
-                // Let's assume we show all complains for the school or filter by user id.
-                final complains = snapshot.data!.where((c) => c['user'] != null && (c['user']['_id'] == user?.id || c['user'] == user?.id)).toList();
-                
-                if (complains.isEmpty) {
-                   return const Center(child: Text('You have not made any complains yet.'));
-                }
+          Text('Submitted Complaints', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 16),
 
-                return ListView.builder(
-                  itemCount: complains.length,
-                  itemBuilder: (context, index) {
-                    final c = complains[index];
-                    return Card(
-                      child: ListTile(
-                        title: Text(c['title'] ?? 'No Title'),
-                        subtitle: Text(c['description'] ?? ''),
-                        trailing: Text(c['date'] != null ? DateFormat('MMM dd, yyyy').format(DateTime.parse(c['date'])) : ''),
-                      ),
-                    );
-                  },
+          FutureBuilder<List<dynamic>>(
+            future: ApiService().getComplains(user?.schoolId ?? ''),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor));
+              } else if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+                return const PremiumCard(
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32.0),
+                      child: Text('No complaints submitted yet.', style: TextStyle(color: AppTheme.textSecondary)),
+                    ),
+                  ),
                 );
-              },
-            ),
+              }
+
+              final complains = snapshot.data!.where((c) => c['user'] != null && (c['user']['_id'] == user?.id || c['user'] == user?.id)).toList();
+              
+              if (complains.isEmpty) {
+                return const PremiumCard(
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32.0),
+                      child: Text('You have not submitted any complaints yet.', style: TextStyle(color: AppTheme.textSecondary)),
+                    ),
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: complains.length,
+                itemBuilder: (context, index) {
+                  final c = complains[index];
+                  final date = c['date'] != null ? DateFormat('MMM dd, yyyy').format(DateTime.parse(c['date'])) : '';
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: PremiumCard(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(c['title'] ?? 'Complaint', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                              Text(date, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(c['description'] ?? '', style: const TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
           ),
         ],
       ),

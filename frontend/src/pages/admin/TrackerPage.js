@@ -335,12 +335,21 @@ const TrackerPage = () => {
                                             px: 1.5,
                                             py: 0.5,
                                             borderRadius: '12px',
-                                            backgroundColor: trackerData?.status === 'Online' ? '#E8F5E9' : '#FFEBEE',
-                                            color: trackerData?.status === 'Online' ? '#2E7D32' : '#C62828',
+                                            backgroundColor: (() => {
+                                                const isRecent = trackerData?.last_updated && (new Date().getTime() - new Date(trackerData.last_updated).getTime() <= 2 * 60 * 1000);
+                                                return (trackerData?.status === 'Online' && isRecent) ? '#E8F5E9' : '#FFEBEE';
+                                            })(),
+                                            color: (() => {
+                                                const isRecent = trackerData?.last_updated && (new Date().getTime() - new Date(trackerData.last_updated).getTime() <= 2 * 60 * 1000);
+                                                return (trackerData?.status === 'Online' && isRecent) ? '#2E7D32' : '#C62828';
+                                            })(),
                                             fontWeight: '700',
                                             fontSize: '0.75rem'
                                         }}>
-                                            {trackerData?.status || 'Offline'}
+                                            {(() => {
+                                                const isRecent = trackerData?.last_updated && (new Date().getTime() - new Date(trackerData.last_updated).getTime() <= 2 * 60 * 1000);
+                                                return (trackerData?.status === 'Online' && isRecent) ? 'Online' : 'Offline';
+                                            })()}
                                         </Box>
                                     </Box>
 

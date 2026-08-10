@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../services/api_service.dart';
+import '../../theme.dart';
+import '../../widgets/premium_card.dart';
+import '../../widgets/page_header.dart';
 
 class ParentAssignments extends StatefulWidget {
   const ParentAssignments({super.key});
@@ -36,7 +39,11 @@ class _ParentAssignmentsState extends State<ParentAssignments> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppTheme.primaryColor),
+      );
+    }
 
     final user = Provider.of<AuthProvider>(context).currentUser;
 
@@ -52,46 +59,61 @@ class _ParentAssignmentsState extends State<ParentAssignments> {
       if (myStatus != null && myStatus['status'] == 'Submitted') {
         submitted++;
       } else {
-        pending++; // 'Assigned' or 'Pending'
+        pending++;
       }
     }
 
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Assignments', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 20),
+          const PageHeader(
+            title: 'Assignments',
+            subtitle: 'Review homework due dates, instructions, and submissions.',
+          ),
 
-          // Overall Stats
-          Card(
-            elevation: 3,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  const Text('Assignment Overview', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Chip(label: Text('Submitted: $submitted'), backgroundColor: Colors.green.shade100),
-                      Chip(label: Text('Pending: $pending'), backgroundColor: Colors.orange.shade100),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Text('Total Assignments: ${_assignments.length}', style: const TextStyle(color: Colors.grey)),
-                ],
-              ),
+          // Overview KPI Card
+          PremiumCard(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${_assignments.length}',
+                      style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w800, color: AppTheme.primaryColor, letterSpacing: -1),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text('Total Assignments', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    _buildMiniBadge(Icons.task_alt_rounded, 'Submitted: $submitted', const Color(0xFF10B981), const Color(0xFFD1FAE5)),
+                    const SizedBox(height: 6),
+                    _buildMiniBadge(Icons.pending_actions_rounded, 'Pending: $pending', const Color(0xFFF59E0B), const Color(0xFFFEF3C7)),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
 
-          // Assignment List
+          // List
           Expanded(
             child: _assignments.isEmpty
-                ? const Center(child: Text('No assignments', style: TextStyle(color: Colors.grey)))
+                ? const PremiumCard(
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24.0),
+                        child: Text('No assignments posted yet.', style: TextStyle(color: AppTheme.textSecondary)),
+                      ),
+                    ),
+                  )
                 : ListView.builder(
                     itemCount: _assignments.length,
                     itemBuilder: (context, index) {
@@ -108,15 +130,20 @@ class _ParentAssignmentsState extends State<ParentAssignments> {
                       
                       final isOverdue = dueDate != null && dueDate.isBefore(DateTime.now()) && statusText != 'Submitted';
 
-                      Color statusColor = Colors.orange;
-                      if (statusText == 'Submitted') statusColor = Colors.green;
-                      else if (isOverdue) statusColor = Colors.red;
+                      Color statusColor = const Color(0xFFF59E0B);
+                      Color bgColor = const Color(0xFFFEF3C7);
+                      if (statusText == 'Submitted') {
+                        statusColor = const Color(0xFF10B981);
+                        bgColor = const Color(0xFFD1FAE5);
+                      } else if (isOverdue) {
+                        statusColor = const Color(0xFFEF4444);
+                        bgColor = const Color(0xFFFEE2E2);
+                      }
 
-                      return Card(
-                        elevation: 2,
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12.0),
+                        child: PremiumCard(
+                          padding: const EdgeInsets.all(20),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -124,41 +151,73 @@ class _ParentAssignmentsState extends State<ParentAssignments> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Expanded(
-                                    child: Text(a['title'] ?? 'No Title', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                    child: Text(
+                                      a['title'] ?? 'Untitled Assignment',
+                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                                    ),
                                   ),
-                                  Chip(
-                                    label: Text(statusText),
-                                    backgroundColor: statusColor,
-                                    labelStyle: const TextStyle(color: Colors.white),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(20)),
+                                    child: Text(
+                                      isOverdue ? 'Overdue' : statusText,
+                                      style: TextStyle(color: statusColor, fontWeight: FontWeight.w700, fontSize: 12),
+                                    ),
                                   ),
                                 ],
                               ),
-                              const Divider(),
+                              const SizedBox(height: 12),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text('Subject: ${a['subject']?['subName'] ?? 'N/A'}'),
-                                  Text('Due: ${dueDate != null ? DateFormat('MMM dd, yyyy').format(dueDate) : 'N/A'}'),
+                                  Text(
+                                    'Subject: ${a['subject']?['subName'] ?? 'General'}',
+                                    style: const TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w600, fontSize: 13),
+                                  ),
+                                  Text(
+                                    'Due: ${dueDate != null ? DateFormat('MMM dd, yyyy').format(dueDate) : 'No due date'}',
+                                    style: const TextStyle(color: AppTheme.textDisabled, fontWeight: FontWeight.w600, fontSize: 13),
+                                  ),
                                 ],
                               ),
                               if (a['description'] != null && a['description'].toString().isNotEmpty) ...[
-                                const SizedBox(height: 8),
-                                Text(a['description'], style: const TextStyle(color: Colors.grey)),
+                                const SizedBox(height: 10),
+                                Text(
+                                  a['description'],
+                                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13, height: 1.4),
+                                ),
                               ],
                               if (statusText == 'Submitted' && marks != null) ...[
-                                const SizedBox(height: 8),
-                                Chip(label: Text('Marks: $marks'), backgroundColor: Colors.blue.shade100),
+                                const SizedBox(height: 12),
+                                _buildMiniBadge(Icons.star_rounded, 'Marks Awarded: $marks', AppTheme.primaryColor, AppTheme.primaryLight),
                               ],
-                              if (isOverdue) ...[
-                                const SizedBox(height: 8),
-                                const Chip(label: Text('Overdue'), backgroundColor: Colors.red, labelStyle: TextStyle(color: Colors.white)),
-                              ]
                             ],
                           ),
                         ),
                       );
                     },
                   ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniBadge(IconData icon, String value, Color color, Color bgColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
+          Text(
+            value,
+            style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12),
           ),
         ],
       ),

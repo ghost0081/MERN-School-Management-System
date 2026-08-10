@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
 import '../auth/login_screen.dart';
+import '../../theme.dart';
 
 import 'teacher_home.dart';
 import 'teacher_class.dart';
@@ -12,6 +13,11 @@ import 'teacher_leave.dart';
 import 'teacher_timetable.dart';
 import 'teacher_profile.dart';
 
+/*
+ * TeacherDashboard — Premium UI Rewrite
+ * 
+ * Replaces default Material Drawer with a stylized premium navigation drawer.
+ */
 class TeacherDashboard extends StatefulWidget {
   const TeacherDashboard({super.key});
 
@@ -35,11 +41,11 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
   final List<String> _titles = [
     'Teacher Dashboard',
     'Class Details',
-    'Complain',
+    'Complaints',
     'Assignments',
     'Request Leave',
     'Timetable',
-    'Profile',
+    'My Profile',
   ];
 
   void _onItemTapped(int index) {
@@ -49,12 +55,11 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
     Navigator.pop(context); // Close the drawer
   }
 
-  void _logout() {
-    Provider.of<AuthProvider>(context, listen: false).logout();
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
-      (route) => false,
-    );
+  void _logout() async {
+    await Provider.of<AuthProvider>(context, listen: false).logout();
+    if (mounted) {
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+    }
   }
 
   @override
@@ -66,92 +71,161 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
       appBar: AppBar(
         title: Text(_titles[_selectedIndex]),
         elevation: 0,
+        scrolledUnderElevation: 0,
       ),
       drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
+        backgroundColor: AppTheme.backgroundColor,
+        child: Column(
           children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor,
+            // Premium Drawer Header
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + 24,
+                bottom: 24,
+                left: 24,
+                right: 24,
+              ),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppTheme.primaryColor,
+                    Color(0xFF3B82F6), // Blue 500
+                  ],
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  const CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.person, size: 35, color: Colors.blue),
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        user?.name?.substring(0, 1).toUpperCase() ?? 'T',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.primaryColor,
+                        ),
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 16),
                   Text(
-                    user?.name ?? 'Teacher',
-                    style: const TextStyle(color: Colors.white, fontSize: 18),
+                    user?.name ?? 'Teacher Portal',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
+                  const SizedBox(height: 4),
                   Text(
                     user?.email ?? '',
-                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
             ),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text('Home'),
-              selected: _selectedIndex == 0,
-              onTap: () => _onItemTapped(0),
+            
+            // Drawer Items
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                children: [
+                  _buildDrawerItem(0, 'Home', Icons.space_dashboard_rounded),
+                  _buildDrawerItem(1, 'Class $sclassName', Icons.class_rounded),
+                  _buildDrawerItem(2, 'Complaints', Icons.announcement_rounded),
+                  _buildDrawerItem(3, 'Assignments', Icons.assignment_turned_in_rounded),
+                  _buildDrawerItem(4, 'Request Leave', Icons.event_busy_rounded),
+                  _buildDrawerItem(5, 'Timetable', Icons.access_time_rounded),
+                  
+                  const Padding(
+                    padding: EdgeInsets.only(left: 16.0, top: 16.0, bottom: 8.0),
+                    child: Text(
+                      'ACCOUNT',
+                      style: TextStyle(
+                        color: AppTheme.textDisabled,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ),
+                  
+                  _buildDrawerItem(6, 'Profile', Icons.person_rounded),
+                ],
+              ),
             ),
-            ListTile(
-              leading: const Icon(Icons.class_),
-              title: Text('Class $sclassName'),
-              selected: _selectedIndex == 1,
-              onTap: () => _onItemTapped(1),
-            ),
-            ListTile(
-              leading: const Icon(Icons.announcement_outlined),
-              title: const Text('Complain'),
-              selected: _selectedIndex == 2,
-              onTap: () => _onItemTapped(2),
-            ),
-            ListTile(
-              leading: const Icon(Icons.assignment_turned_in),
-              title: const Text('Assignments'),
-              selected: _selectedIndex == 3,
-              onTap: () => _onItemTapped(3),
-            ),
-            ListTile(
-              leading: const Icon(Icons.event_busy),
-              title: const Text('Request Leave'),
-              selected: _selectedIndex == 4,
-              onTap: () => _onItemTapped(4),
-            ),
-            ListTile(
-              leading: const Icon(Icons.access_time),
-              title: const Text('Timetable'),
-              selected: _selectedIndex == 5,
-              onTap: () => _onItemTapped(5),
-            ),
-            const Divider(),
-            const Padding(
-              padding: EdgeInsets.only(left: 16.0, top: 8.0, bottom: 8.0),
-              child: Text('User', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-            ),
-            ListTile(
-              leading: const Icon(Icons.account_circle_outlined),
-              title: const Text('Profile'),
-              selected: _selectedIndex == 6,
-              onTap: () => _onItemTapped(6),
-            ),
-            ListTile(
-              leading: const Icon(Icons.exit_to_app),
-              title: const Text('Logout'),
-              onTap: _logout,
+
+            // Logout Button at bottom
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ListTile(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                leading: const Icon(Icons.logout_rounded, color: Color(0xFFEF4444)),
+                title: const Text(
+                  'Sign Out',
+                  style: TextStyle(
+                    color: Color(0xFFEF4444),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                tileColor: const Color(0xFFFEF2F2),
+                onTap: _logout,
+              ),
             ),
           ],
         ),
       ),
       body: _screens[_selectedIndex],
+    );
+  }
+
+  Widget _buildDrawerItem(int index, String title, IconData icon) {
+    final isSelected = _selectedIndex == index;
+    
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4.0),
+      child: ListTile(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        leading: Icon(
+          icon, 
+          color: isSelected ? AppTheme.primaryColor : AppTheme.textSecondary,
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            color: isSelected ? AppTheme.primaryColor : AppTheme.textPrimary,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+          ),
+        ),
+        selected: isSelected,
+        tileColor: isSelected ? AppTheme.primaryLight : Colors.transparent,
+        onTap: () => _onItemTapped(index),
+      ),
     );
   }
 }

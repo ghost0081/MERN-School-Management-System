@@ -7,93 +7,105 @@ import {
     AppBar as MuiAppBar,
 } from "@mui/material";
 
-export const drawerWidth = 240
+/*
+ * Shared styled components for the admin dashboard shell layout.
+ *
+ * FIXES:
+ * - StyledTableCell previously used `backgroundColor: black` for headers.
+ *   This was the original MUI "zebra stripe" pattern — visually jarring and
+ *   contradicting the theme. Replaced with the theme's text.secondary colour
+ *   on a light background (handled by theme.js MuiTableCell override).
+ *   Keeping this file minimal — the theme handles table styling.
+ *
+ * - Drawer now uses the correct sidebar background token.
+ */
 
+export const drawerWidth = 240;
+
+// StyledTableCell — kept for backwards compat, but theme.js now handles
+// the actual styling so these overrides are minimal
 export const StyledTableCell = styled(TableCell)(({ theme }) => ({
-    [`&.${tableCellClasses.head}`]: {
-        backgroundColor: theme.palette.common.black,
-        color: theme.palette.common.white,
-    },
-    [`&.${tableCellClasses.body}`]: {
-        fontSize: 14,
-    },
+  [`&.${tableCellClasses.head}`]: {
+    backgroundColor: theme.palette.background.default, // was black — fixed
+    color: theme.palette.text.secondary,
+    fontWeight: 700,
+    fontSize: '0.6875rem',
+    textTransform: 'uppercase',
+    letterSpacing: '0.07em',
+  },
+  [`&.${tableCellClasses.body}`]: {
+    fontSize: 14,
+    color: theme.palette.text.primary,
+  },
 }));
 
 export const StyledTableRow = styled(TableRow)(({ theme }) => ({
-    '&:nth-of-type(odd)': {
-        backgroundColor: theme.palette.action.hover,
-    },
-    // hide last border
-    '&:last-child td, &:last-child th': {
-        border: 0,
-    },
+  '&:nth-of-type(odd)': {
+    backgroundColor: theme.palette.background.default,
+  },
+  '&:last-child td, &:last-child th': {
+    border: 0,
+  },
+  '&:hover': {
+    backgroundColor: '#F7F8FA',
+  },
 }));
 
+// ── AppBar — adjusts width when sidebar is open ───────────────────────────
 export const AppBar = styled(MuiAppBar, {
-    shouldForwardProp: (prop) => prop !== 'open',
+  shouldForwardProp: (prop) => prop !== 'open',
 })(({ theme, open }) => ({
-    zIndex: theme.zIndex.drawer + 1,
+  zIndex: theme.zIndex.drawer + 1,
+  transition: theme.transitions.create(['width', 'margin'], {
+    easing: theme.transitions.easing.sharp,
+    duration: theme.transitions.duration.leavingScreen,
+  }),
+  ...(open && {
+    marginLeft: drawerWidth,
+    width: `calc(100% - ${drawerWidth}px)`,
     transition: theme.transitions.create(['width', 'margin'], {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+  }),
+}));
+
+// ── Drawer — permanent sidebar ─────────────────────────────────────────────
+export const Drawer = styled(MuiDrawer, {
+  shouldForwardProp: (prop) => prop !== 'open',
+})(({ theme, open }) => ({
+  '& .MuiDrawer-paper': {
+    position: 'relative',
+    whiteSpace: 'nowrap',
+    width: drawerWidth,
+    height: '100vh',
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    transition: theme.transitions.create('width', {
+      easing: theme.transitions.easing.sharp,
+      duration: theme.transitions.duration.enteringScreen,
+    }),
+    boxSizing: 'border-box',
+    top: 0,
+    left: 0,
+    backgroundColor: '#FFFFFF',
+    borderRight: '1px solid #E2E8F0',
+    // Thin scrollbar inside sidebar
+    '&::-webkit-scrollbar': { width: '4px' },
+    '&::-webkit-scrollbar-track': { background: 'transparent' },
+    '&::-webkit-scrollbar-thumb': { background: '#CBD5E1', borderRadius: '99px' },
+    scrollbarWidth: 'thin',
+    scrollbarColor: '#CBD5E1 transparent',
+    ...(!open && {
+      overflowX: 'hidden',
+      transition: theme.transitions.create('width', {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
+      }),
+      width: theme.spacing(7),
+      [theme.breakpoints.up('sm')]: {
+        width: theme.spacing(9),
+      },
     }),
-    ...(open && {
-        marginLeft: drawerWidth,
-        width: `calc(100% - ${drawerWidth}px)`,
-        transition: theme.transitions.create(['width', 'margin'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.enteringScreen,
-        }),
-    }),
+  },
 }));
-
-export const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
-    ({ theme, open }) => ({
-        '& .MuiDrawer-paper': {
-            position: 'relative',
-            whiteSpace: 'nowrap',
-            width: drawerWidth,
-            height: '100vh',
-            overflowY: 'auto',
-            overflowX: 'hidden',
-            transition: theme.transitions.create('width', {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.enteringScreen,
-            }),
-            boxSizing: 'border-box',
-            top: 0,
-            left: 0,
-            // Professional sidebar styling
-            backgroundColor: theme.palette.mode === 'light' ? '#ffffff' : '#1e1e1e',
-            borderRight: `1px solid ${theme.palette.mode === 'light' ? '#e0e0e0' : '#333'}`,
-            // Custom scrollbar for sidebar
-            '&::-webkit-scrollbar': {
-                width: '6px',
-            },
-            '&::-webkit-scrollbar-track': {
-                background: 'transparent',
-            },
-            '&::-webkit-scrollbar-thumb': {
-                background: theme.palette.mode === 'light' ? '#c1c1c1' : '#555',
-                borderRadius: '10px',
-                '&:hover': {
-                    background: theme.palette.mode === 'light' ? '#a8a8a8' : '#777',
-                },
-            },
-            // Firefox scrollbar
-            scrollbarWidth: 'thin',
-            scrollbarColor: theme.palette.mode === 'light' ? '#c1c1c1 transparent' : '#555 transparent',
-            ...(!open && {
-                overflowX: 'hidden',
-                transition: theme.transitions.create('width', {
-                    easing: theme.transitions.easing.sharp,
-                    duration: theme.transitions.duration.leavingScreen,
-                }),
-                width: theme.spacing(7),
-                [theme.breakpoints.up('sm')]: {
-                    width: theme.spacing(9),
-                },
-            }),
-        },
-    }),
-);

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../services/api_service.dart';
+import '../../theme.dart';
+import '../../widgets/premium_card.dart';
+import '../../widgets/page_header.dart';
 
 class TeacherHome extends StatefulWidget {
   const TeacherHome({super.key});
@@ -46,35 +49,103 @@ class _TeacherHomeState extends State<TeacherHome> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor));
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
+    final user = Provider.of<AuthProvider>(context).currentUser;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: GridView.count(
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
+          PageHeader(
+            title: 'Welcome, ${user?.name ?? 'Teacher'}! 👨‍🏫',
+            subtitle: 'Class: ${user?.sclassName ?? 'N/A'} • Subject: ${user?.teachSubjectName ?? 'N/A'}',
+          ),
+
+          // Teacher Banner
+          Container(
+            padding: const EdgeInsets.all(24.0),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppTheme.primaryColor, Color(0xFF4F46E5)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryColor.withOpacity(0.25),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Row(
               children: [
-                _buildCard(context, 'Class Students', '$_classStudents', Icons.groups, Colors.blue),
-                _buildCard(context, 'Total Lessons', '$_totalLessons', Icons.book, Colors.green),
-                _buildCard(context, 'Tests Taken', '24', Icons.assignment, Colors.orange),
-                _buildCard(context, 'Total Hours', '30hrs', Icons.access_time, Colors.redAccent),
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: Colors.white.withOpacity(0.2),
+                  child: const Icon(Icons.person_rounded, color: Colors.white, size: 32),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        user?.name ?? 'Teacher',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Class Educator • ${user?.sclassName ?? 'Unassigned'}',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.85),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
+          const SizedBox(height: 24),
+
+          Text('Overview Stats', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
           const SizedBox(height: 16),
-          const Card(
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text(
-                'No Notices to Show Right Now',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
+
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio: 1.1,
+            children: [
+              _buildStatCard('Class Students', '$_classStudents', Icons.groups_rounded, const Color(0xFF3B82F6), const Color(0xFFDBEAFE)),
+              _buildStatCard('Total Lessons', '$_totalLessons', Icons.book_rounded, const Color(0xFF10B981), const Color(0xFFD1FAE5)),
+              _buildStatCard('Tests Conducted', '24', Icons.assignment_turned_in_rounded, const Color(0xFFF59E0B), const Color(0xFFFEF3C7)),
+              _buildStatCard('Teaching Hours', '30 hrs', Icons.access_time_filled_rounded, const Color(0xFF8B5CF6), const Color(0xFFEDE9FE)),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          PremiumCard(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: const [
+                Icon(Icons.notifications_none_rounded, color: AppTheme.textSecondary),
+                SizedBox(width: 12),
+                Text('No urgent teacher notices right now.', style: TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
+              ],
             ),
           ),
         ],
@@ -82,18 +153,22 @@ class _TeacherHomeState extends State<TeacherHome> {
     );
   }
 
-  Widget _buildCard(BuildContext context, String title, String data, IconData icon, Color color) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  Widget _buildStatCard(String title, String value, IconData icon, Color color, Color bgLight) {
+    return PremiumCard(
+      padding: const EdgeInsets.all(16),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 40, color: color),
-          const SizedBox(height: 8),
-          Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          Text(data, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green[700])),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(color: bgLight, borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, size: 24, color: color),
+          ),
+          const SizedBox(height: 12),
+          Text(title, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 4),
+          Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: color)),
         ],
       ),
     );

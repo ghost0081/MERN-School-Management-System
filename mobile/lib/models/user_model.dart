@@ -6,6 +6,7 @@ class UserModel {
   final String? sclassName;
   final String? sclassId;
   final String? teachSubjectId;
+  final String? teachSubjectName;
   final String? studentId;
   final String schoolId;
 
@@ -17,6 +18,7 @@ class UserModel {
     this.sclassName,
     this.sclassId,
     this.teachSubjectId,
+    this.teachSubjectName,
     this.studentId,
     required this.schoolId,
   });
@@ -45,6 +47,12 @@ class UserModel {
       return subject.toString();
     }
 
+    String? extractSubjectName(dynamic subject) {
+      if (subject == null) return null;
+      if (subject is Map) return subject['subName']?.toString();
+      return null;
+    }
+
     return UserModel(
       id: json['_id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
@@ -53,7 +61,8 @@ class UserModel {
       sclassName: extractClassName(json['sclassName'] ?? json['teachSclass']),
       sclassId: extractClassId(json['sclassName'] ?? json['teachSclass']),
       teachSubjectId: extractSubjectId(json['teachSubject']),
-      studentId: extractSubjectId(json['student']), // uses same extraction logic as subject
+      teachSubjectName: extractSubjectName(json['teachSubject']),
+      studentId: extractSubjectId(json['student']),
       schoolId: extractSchool(json['school']),
     );
   }
@@ -68,7 +77,10 @@ class UserModel {
         '_id': sclassId,
         'sclassName': sclassName,
       },
-      'teachSubject': teachSubjectId,
+      'teachSubject': {
+        '_id': teachSubjectId,
+        'subName': teachSubjectName,
+      },
       'student': studentId,
       'school': schoolId,
     };

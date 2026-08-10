@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../services/api_service.dart';
+import '../../theme.dart';
+import '../../widgets/premium_card.dart';
+import '../../widgets/page_header.dart';
 
 class ParentFees extends StatefulWidget {
   const ParentFees({super.key});
@@ -39,8 +42,6 @@ class _ParentFeesState extends State<ParentFees> {
     try {
       final user = Provider.of<AuthProvider>(context, listen: false).currentUser;
       if (user?.studentId != null) {
-        // Assume ApiService().getStudentFeeHistory exists, if not we add it. 
-        // Wait, earlier I saw: Future<List<dynamic>> getStudentFeeHistory(String studentId) async in api_service.dart
         _feesList = await ApiService().getStudentFeeHistory(user!.studentId!);
       }
     } catch (e) {
@@ -68,15 +69,17 @@ class _ParentFeesState extends State<ParentFees> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppTheme.primaryColor),
+      );
+    }
 
-    // Calculate Summary
     final paidFeesList = _feesList.where((f) => f['status'] == 'Paid').toList();
     final totalPaidAmount = paidFeesList.fold<double>(0.0, (sum, f) => sum + (double.tryParse(f['amount']?.toString() ?? '0') ?? 0.0));
     final unpaidFeesCount = _feesList.length - paidFeesList.length;
     final paidFeesCount = paidFeesList.length;
 
-    // Find most recent paid fee
     paidFeesList.sort((a, b) {
       final monthCompare = (b['month'] ?? '').compareTo(a['month'] ?? '');
       if (monthCompare != 0) return monthCompare;
@@ -93,161 +96,225 @@ class _ParentFeesState extends State<ParentFees> {
     final filteredFees = _feesList.where((f) => f['month'] == _selectedMonth).toList();
     final currentMonthFee = filteredFees.isNotEmpty ? filteredFees.first : null;
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: ListView(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Fee Payment Status', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          const Text('View your child\'s fee payment status. Only admins can update payment status.', style: TextStyle(color: Colors.grey)),
-          const SizedBox(height: 20),
+          const PageHeader(
+            title: 'Fee Status',
+            subtitle: 'Review monthly tuition payments, receipts, and dues.',
+          ),
 
-          // Month Dropdown
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  isExpanded: true,
-                  value: _selectedMonth,
-                  items: _monthsList.map((m) => DropdownMenuItem(value: m['value'], child: Text(m['label']!))).toList(),
-                  onChanged: (val) {
-                    if (val != null) setState(() => _selectedMonth = val);
-                  },
-                ),
+          // Month selector
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.borderColor),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                isExpanded: true,
+                value: _selectedMonth,
+                items: _monthsList.map((m) => DropdownMenuItem(value: m['value'], child: Text(m['label']!))).toList(),
+                onChanged: (val) {
+                  if (val != null) setState(() => _selectedMonth = val);
+                },
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
-          // Summary Cards
+          // KPIs Row
           Row(
             children: [
               Expanded(
-                child: Card(
-                  elevation: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        const Text('Total Paid', style: TextStyle(color: Colors.grey)),
-                        const SizedBox(height: 5),
-                        Text('₹${totalPaidAmount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 20, color: Colors.green, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
+                child: PremiumCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Total Paid', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 8),
+                      Text(
+                        '₹${totalPaidAmount.toStringAsFixed(0)}',
+                        style: const TextStyle(fontSize: 24, color: Color(0xFF10B981), fontWeight: FontWeight.w800),
+                      ),
+                    ],
                   ),
                 ),
               ),
+              const SizedBox(width: 16),
               Expanded(
-                child: Card(
-                  elevation: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        const Text('Payment Status', style: TextStyle(color: Colors.grey)),
-                        const SizedBox(height: 5),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text('Paid: $paidFeesCount', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
-                            const SizedBox(width: 8),
-                            Text('Unpaid: $unpaidFeesCount', style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                          ],
-                        )
-                      ],
-                    ),
+                child: PremiumCard(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Records Status', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          _buildMiniBadge('Paid: $paidFeesCount', const Color(0xFF10B981), const Color(0xFFD1FAE5)),
+                          _buildMiniBadge('Unpaid: $unpaidFeesCount', const Color(0xFFEF4444), const Color(0xFFFEE2E2)),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ),
             ],
           ),
-          
-          if (nextPaymentDate != null)
-            Card(
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    const Text('Next Payment Date', style: TextStyle(color: Colors.grey)),
-                    const SizedBox(height: 5),
-                    Text(
-                      DateFormat('MMM dd, yyyy').format(nextPaymentDate),
-                      style: TextStyle(
-                        fontSize: 20, 
-                        color: nextPaymentDate.isBefore(DateTime.now()) ? Colors.red : Colors.blue, 
-                        fontWeight: FontWeight.bold
-                      ),
-                    ),
-                    if (nextPaymentDate.isBefore(DateTime.now()))
-                      const Text('Payment overdue', style: TextStyle(color: Colors.red, fontSize: 12)),
-                  ],
-                ),
-              ),
-            ),
-
           const SizedBox(height: 16),
 
-          // Current Month Status
-          Card(
-            elevation: 3,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          if (nextPaymentDate != null)
+            PremiumCard(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('${_monthsList.firstWhere((m) => m['value'] == _selectedMonth)['label']} Fee Status', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  if (currentMonthFee != null) ...[
-                    Row(
-                      children: [
-                        Chip(
-                          label: Text(currentMonthFee['status'] ?? 'Unknown'),
-                          backgroundColor: currentMonthFee['status'] == 'Paid' ? Colors.green : Colors.red,
-                          labelStyle: const TextStyle(color: Colors.white),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Next Scheduled Payment', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 4),
+                      Text(
+                        DateFormat('MMM dd, yyyy').format(nextPaymentDate),
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: nextPaymentDate.isBefore(DateTime.now()) ? const Color(0xFFEF4444) : AppTheme.primaryColor,
+                          fontWeight: FontWeight.w800,
                         ),
-                        const SizedBox(width: 16),
-                        Text('Amount: ₹${currentMonthFee['amount'] ?? 0}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    if (currentMonthFee['paidDate'] != null)
-                      Text('Paid on: ${DateFormat('MMM dd, yyyy').format(DateTime.parse(currentMonthFee['paidDate']))}', style: const TextStyle(color: Colors.grey)),
-                  ] else ...[
-                    Row(
-                      children: [
-                        const Chip(label: Text('Unpaid'), backgroundColor: Colors.red, labelStyle: TextStyle(color: Colors.white)),
-                        const SizedBox(width: 16),
-                        const Text('No record found for this month', style: TextStyle(color: Colors.grey)),
-                      ],
-                    )
-                  ]
+                      ),
+                    ],
+                  ),
+                  if (nextPaymentDate.isBefore(DateTime.now()))
+                    _buildMiniBadge('OVERDUE', const Color(0xFFEF4444), const Color(0xFFFEE2E2)),
                 ],
               ),
             ),
+
+          const SizedBox(height: 24),
+
+          // Selected Month Status Card
+          PremiumCard(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${_monthsList.firstWhere((m) => m['value'] == _selectedMonth)['label']} Status',
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 12),
+                if (currentMonthFee != null) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildMiniBadge(
+                        currentMonthFee['status'] ?? 'Unknown',
+                        currentMonthFee['status'] == 'Paid' ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                        currentMonthFee['status'] == 'Paid' ? const Color(0xFFD1FAE5) : const Color(0xFFFEE2E2),
+                      ),
+                      Text(
+                        '₹${currentMonthFee['amount'] ?? 0}',
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                      ),
+                    ],
+                  ),
+                  if (currentMonthFee['paidDate'] != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Paid on: ${DateFormat('MMM dd, yyyy').format(DateTime.parse(currentMonthFee['paidDate']))}',
+                      style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                    ),
+                  ],
+                ] else ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildMiniBadge('UNPAID', const Color(0xFFEF4444), const Color(0xFFFEE2E2)),
+                      const Text('No ledger record found for month', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                    ],
+                  ),
+                ],
+              ],
+            ),
           ),
-          
-          const SizedBox(height: 20),
-          const Text('Fee Payment History', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 10),
-          
+
+          const SizedBox(height: 24),
+          Text(
+            'Payment Ledger',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 18),
+          ),
+          const SizedBox(height: 12),
+
           if (_feesList.isEmpty)
-            const Text('No fee records found', style: TextStyle(color: Colors.grey))
+            const PremiumCard(
+              child: Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24.0),
+                  child: Text('No fee records found in history.', style: TextStyle(color: AppTheme.textSecondary)),
+                ),
+              ),
+            )
           else
             ...(_feesList.toList()..sort((a, b) => (b['month'] ?? '').compareTo(a['month'] ?? ''))).map((fee) {
               final mLabel = _monthsList.firstWhere((m) => m['value'] == fee['month'], orElse: () => {'label': fee['month'] ?? ''})['label'];
-              return Card(
-                child: ListTile(
-                  title: Text('$mLabel - ₹${fee['amount'] ?? 0}'),
-                  subtitle: Text(fee['paidDate'] != null ? DateFormat('MMM dd, yyyy').format(DateTime.parse(fee['paidDate'])) : 'No date'),
-                  trailing: Chip(
-                    label: Text(fee['status'] ?? 'Unknown'),
-                    backgroundColor: fee['status'] == 'Paid' ? Colors.green : Colors.red,
-                    labelStyle: const TextStyle(color: Colors.white),
+              final isPaid = fee['status'] == 'Paid';
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: PremiumCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(mLabel ?? '', style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                          const SizedBox(height: 4),
+                          Text(
+                            fee['paidDate'] != null ? DateFormat('MMM dd, yyyy').format(DateTime.parse(fee['paidDate'])) : 'Unpaid',
+                            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Text('₹${fee['amount'] ?? 0}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                          const SizedBox(width: 12),
+                          _buildMiniBadge(
+                            fee['status'] ?? 'Unknown',
+                            isPaid ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                            isPaid ? const Color(0xFFD1FAE5) : const Color(0xFFFEE2E2),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               );
             }).toList(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildMiniBadge(String value, Color color, Color bgColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        value,
+        style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 11),
       ),
     );
   }

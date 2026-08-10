@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../services/api_service.dart';
+import '../../theme.dart';
+import '../../widgets/premium_card.dart';
+import '../../widgets/page_header.dart';
 
 class ParentHome extends StatefulWidget {
   const ParentHome({super.key});
@@ -25,9 +28,7 @@ class _ParentHomeState extends State<ParentHome> {
     try {
       final user = Provider.of<AuthProvider>(context, listen: false).currentUser;
       if (user?.studentId != null) {
-        // Fetch student details to get attendance, name, rollNum, class, school
         _studentDetails = await ApiService().getStudentDetails(user!.studentId!);
-        // Fetch assignments for the student
         _assignments = await ApiService().getStudentAssignments(user.studentId!);
       }
     } catch (e) {
@@ -39,13 +40,17 @@ class _ParentHomeState extends State<ParentHome> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppTheme.primaryColor),
+      );
+    }
 
     final user = Provider.of<AuthProvider>(context).currentUser;
-    final sName = _studentDetails?['name'] ?? 'Loading...';
-    final sRoll = _studentDetails?['rollNum']?.toString() ?? 'Loading...';
-    final sClass = _studentDetails?['sclassName']?['sclassName'] ?? 'Loading...';
-    final sSchool = _studentDetails?['school']?['schoolName'] ?? 'Loading...';
+    final sName = _studentDetails?['name'] ?? 'Unknown';
+    final sRoll = _studentDetails?['rollNum']?.toString() ?? 'N/A';
+    final sClass = _studentDetails?['sclassName']?['sclassName'] ?? 'N/A';
+    final sSchool = _studentDetails?['school']?['schoolName'] ?? 'N/A';
 
     // Calculate Attendance Stats
     final attendance = (_studentDetails?['attendance'] as List<dynamic>?) ?? [];
@@ -55,7 +60,9 @@ class _ParentHomeState extends State<ParentHome> {
       if (a['status'] == 'Present') present++;
       if (a['status'] == 'Absent') absent++;
     }
-    final attendancePercentage = attendance.isNotEmpty ? ((present / attendance.length) * 100).toStringAsFixed(1) : '0';
+    final attendancePercentage = attendance.isNotEmpty 
+        ? ((present / attendance.length) * 100).toStringAsFixed(1) 
+        : '0';
 
     // Calculate Assignments Stats
     int submitted = 0;
@@ -69,122 +76,249 @@ class _ParentHomeState extends State<ParentHome> {
       if (myStatus != null && myStatus['status'] == 'Submitted') {
         submitted++;
       } else {
-        pending++; // 'Assigned' or 'Pending'
+        pending++;
       }
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: ListView(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Welcome, ${user?.name ?? 'Parent'}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 20),
+          PageHeader(
+            title: 'Welcome, ${user?.name ?? 'Parent'}',
+            subtitle: 'Here is an overview of your child\'s progress.',
+          ),
           
           // Child Information
-          Card(
-            elevation: 3,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Child Information', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue)),
-                  const SizedBox(height: 10),
-                  Text('Name: $sName', style: const TextStyle(fontSize: 16)),
-                  Text('Roll Number: $sRoll', style: const TextStyle(fontSize: 16)),
-                  Text('Class: $sClass', style: const TextStyle(fontSize: 16)),
-                  Text('School: $sSchool', style: const TextStyle(fontSize: 16)),
-                ],
-              ),
+          PremiumCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  decoration: const BoxDecoration(
+                    color: AppTheme.backgroundColor,
+                    borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+                    border: Border(bottom: BorderSide(color: AppTheme.borderColor)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.person_rounded, color: AppTheme.primaryColor, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Child Information',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 16),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    children: [
+                      _buildInfoRow('Student Name', sName),
+                      const Divider(height: 24, color: AppTheme.borderColor),
+                      _buildInfoRow('Roll Number', sRoll),
+                      const Divider(height: 24, color: AppTheme.borderColor),
+                      _buildInfoRow('Class Enrolled', sClass),
+                      const Divider(height: 24, color: AppTheme.borderColor),
+                      _buildInfoRow('School', sSchool),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           
-          // Attendance Overview
-          Card(
-            elevation: 3,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Attendance Overview', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue)),
-                  const SizedBox(height: 10),
-                  Text('$attendancePercentage%', style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.green)),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+          // Row for KPIs
+          Row(
+            children: [
+              // Attendance Overview
+              Expanded(
+                child: PremiumCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Chip(label: Text('Present: $present'), backgroundColor: Colors.green.shade100),
-                      Chip(label: Text('Absent: $absent'), backgroundColor: Colors.red.shade100),
+                      Row(
+                        children: [
+                          const Icon(Icons.fact_check_rounded, color: Color(0xFF10B981), size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Attendance',
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        '$attendancePercentage%',
+                        style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Color(0xFF10B981), letterSpacing: -1),
+                      ),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          _buildMiniBadge(Icons.check_circle_rounded, '$present', const Color(0xFF10B981), const Color(0xFFD1FAE5)),
+                          _buildMiniBadge(Icons.cancel_rounded, '$absent', const Color(0xFFEF4444), const Color(0xFFFEE2E2)),
+                        ],
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  Text('Total Records: ${attendance.length}', style: const TextStyle(color: Colors.grey)),
-                ],
+                ),
               ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Assignments Overview
-          Card(
-            elevation: 3,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Assignments Overview', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue)),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+              const SizedBox(width: 16),
+              
+              // Assignments Overview
+              Expanded(
+                child: PremiumCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Chip(label: Text('Submitted: $submitted'), backgroundColor: Colors.green.shade100),
-                      Chip(label: Text('Pending: $pending'), backgroundColor: Colors.orange.shade100),
+                      Row(
+                        children: [
+                          const Icon(Icons.assignment_rounded, color: AppTheme.primaryColor, size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Assignments',
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        '${_assignments.length}',
+                        style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: AppTheme.primaryColor, letterSpacing: -1),
+                      ),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          _buildMiniBadge(Icons.task_alt_rounded, '$submitted', const Color(0xFF10B981), const Color(0xFFD1FAE5)),
+                          _buildMiniBadge(Icons.pending_actions_rounded, '$pending', const Color(0xFFF59E0B), const Color(0xFFFEF3C7)),
+                        ],
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  Text('Total Assignments: ${_assignments.length}', style: const TextStyle(color: Colors.grey)),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
 
           // Recent Attendance
-          Card(
-            elevation: 3,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Recent Attendance', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue)),
-                  const SizedBox(height: 10),
-                  if (attendance.isEmpty)
-                    const Text('No attendance records', style: TextStyle(color: Colors.grey))
-                  else
-                    ...attendance.take(5).map((a) {
-                      final isPresent = a['status'] == 'Present';
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(a['date'] != null ? a['date'].toString().split('T')[0] : 'Unknown Date'),
-                            Chip(
-                              label: Text(a['status'] ?? 'Unknown'),
-                              backgroundColor: isPresent ? Colors.green : Colors.red,
-                              labelStyle: const TextStyle(color: Colors.white),
-                            ),
-                          ],
+          PremiumCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  decoration: const BoxDecoration(
+                    color: AppTheme.backgroundColor,
+                    borderRadius: BorderRadius.only(topLeft: Radius.circular(16), topRight: Radius.circular(16)),
+                    border: Border(bottom: BorderSide(color: AppTheme.borderColor)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.calendar_month_rounded, color: AppTheme.primaryColor, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Recent Attendance Log',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 16),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: attendance.isEmpty
+                    ? const Padding(
+                        padding: EdgeInsets.all(32.0),
+                        child: Center(
+                          child: Text(
+                            'No attendance records found.',
+                            style: TextStyle(color: AppTheme.textSecondary),
+                          ),
                         ),
-                      );
-                    }).toList(),
-                ],
-              ),
+                      )
+                    : Column(
+                        children: attendance.take(5).map((a) {
+                          final isPresent = a['status'] == 'Present';
+                          return ListTile(
+                            leading: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: isPresent ? const Color(0xFFD1FAE5) : const Color(0xFFFEE2E2),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                isPresent ? Icons.check_rounded : Icons.close_rounded,
+                                color: isPresent ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                              ),
+                            ),
+                            title: Text(
+                              a['date'] != null ? a['date'].toString().split('T')[0] : 'Unknown Date',
+                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            trailing: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: isPresent ? const Color(0xFF10B981) : const Color(0xFFEF4444),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                a['status'] ?? 'Unknown',
+                                style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                ),
+              ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
+        ),
+        Text(
+          value,
+          style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w700),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMiniBadge(IconData icon, String value, Color color, Color bgColor) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(
+            value,
+            style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12),
           ),
         ],
       ),

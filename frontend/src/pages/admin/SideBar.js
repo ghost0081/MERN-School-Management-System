@@ -1,17 +1,17 @@
 import * as React from 'react';
-import { Divider, ListItemButton, ListItemIcon, ListItemText, ListSubheader, Collapse, List } from '@mui/material';
+import {
+  Divider, ListItemButton, ListItemIcon, ListItemText,
+  ListSubheader, Collapse, List, Typography, Box,
+} from '@mui/material';
 import { Link, useLocation } from 'react-router-dom';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
-import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import InventoryIcon from '@mui/icons-material/Inventory';
-import ReceiptIcon from '@mui/icons-material/Receipt';
 
-import HomeIcon from "@mui/icons-material/Home";
-import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
-import ExitToAppIcon from "@mui/icons-material/ExitToApp";
-import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
+// Icons
+import HomeIcon from '@mui/icons-material/Home';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import AnnouncementOutlinedIcon from '@mui/icons-material/AnnouncementOutlined';
 import ClassOutlinedIcon from '@mui/icons-material/ClassOutlined';
 import SupervisorAccountOutlinedIcon from '@mui/icons-material/SupervisorAccountOutlined';
@@ -28,238 +28,214 @@ import MenuBookIcon from '@mui/icons-material/MenuBook';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import BluetoothIcon from '@mui/icons-material/Bluetooth';
+import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import InventoryIcon from '@mui/icons-material/Inventory';
+import ReceiptIcon from '@mui/icons-material/Receipt';
+
+/*
+ * SideBar — navigation for the Admin dashboard
+ *
+ * RESTRUCTURED from 20 flat items to 6 semantic groups.
+ *
+ * WHY: Hick's Law states that decision time increases logarithmically with
+ * the number of choices. A flat 20-item list forces the user to scan every
+ * item. Grouped navigation (6 groups × ~3-4 items) reduces the cognitive
+ * search space by ~5×.
+ *
+ * Groups:
+ *   Overview  → Dashboard
+ *   People    → Students, Teachers, Parents, Staff, Payroll
+ *   Academics → Classes, Subjects, Timetable
+ *   Finance   → Fees, Financial Reports
+ *   Operations → Attendance (BLE), Tracker, Library, Stationery, Frontdesk
+ *   Communicate → Notices, Complaints, Teacher Leave
+ *
+ * Logout moved to bottom fixed section (not inside navigation groups).
+ */
+
+// ── Helper: Nav Item ──────────────────────────────────────────────────────
+const NavItem = ({ to, icon: Icon, label, selected }) => (
+  <ListItemButton
+    component={Link}
+    to={to}
+    selected={selected}
+    aria-current={selected ? 'page' : undefined}
+    sx={{ borderRadius: '8px', mx: 1, mb: 0.25 }}
+  >
+    <ListItemIcon>
+      <Icon sx={{ fontSize: 20, color: selected ? 'primary.dark' : 'text.secondary' }} />
+    </ListItemIcon>
+    <ListItemText primary={label} />
+  </ListItemButton>
+);
+
+// ── Helper: Collapsible Group ─────────────────────────────────────────────
+const NavGroup = ({ icon: Icon, label, children, isOpen, onToggle, isActive }) => (
+  <>
+    <ListItemButton
+      onClick={onToggle}
+      selected={isActive}
+      aria-expanded={isOpen}
+      sx={{ borderRadius: '8px', mx: 1, mb: 0.25 }}
+    >
+      <ListItemIcon>
+        <Icon sx={{ fontSize: 20, color: isActive ? 'primary.dark' : 'text.secondary' }} />
+      </ListItemIcon>
+      <ListItemText primary={label} />
+      {isOpen
+        ? <ExpandLess sx={{ fontSize: 16, color: 'text.secondary' }} />
+        : <ExpandMore sx={{ fontSize: 16, color: 'text.secondary' }} />
+      }
+    </ListItemButton>
+    <Collapse in={isOpen} timeout={180} unmountOnExit>
+      <List component="div" disablePadding sx={{ pl: 1.5 }}>
+        {children}
+      </List>
+    </Collapse>
+  </>
+);
+
+// ── Helper: Section Header ────────────────────────────────────────────────
+const SectionHeader = ({ label }) => (
+  <ListSubheader
+    component="div"
+    disableSticky
+    sx={{
+      fontSize: '0.6875rem',
+      fontWeight: 700,
+      letterSpacing: '0.07em',
+      textTransform: 'uppercase',
+      color: 'text.disabled',
+      lineHeight: 1,
+      py: 1.5,
+      px: 2,
+      mt: 1,
+    }}
+  >
+    {label}
+  </ListSubheader>
+);
+
+// ──────────────────────────────────────────────────────────────────────────
 
 const SideBar = () => {
-    const location = useLocation();
-    const [staffOpen, setStaffOpen] = React.useState(
-        location.pathname.startsWith("/Admin/staff") || location.pathname.startsWith("/Admin/payroll")
-    );
-    const [stationeryOpen, setStationeryOpen] = React.useState(
-        location.pathname.startsWith("/Admin/stationery") || location.pathname.startsWith("/Admin/invoices")
-    );
-    const [frontdeskOpen, setFrontdeskOpen] = React.useState(
-        location.pathname.startsWith("/Admin/frontdesk") || location.pathname.startsWith("/Admin/visitors")
-    );
-    const [libraryOpen, setLibraryOpen] = React.useState(
-        location.pathname.startsWith("/Admin/library")
-    );
+  const location = useLocation();
+  const is = (path) => location.pathname.startsWith(path);
+  const isExact = (path) => location.pathname === path || location.pathname === path + '/';
 
-    const handleStaffClick = () => {
-        setStaffOpen(!staffOpen);
-    };
+  // Persist group open state based on current path
+  const [staffOpen,      setStaffOpen]      = React.useState(is('/Admin/staff') || is('/Admin/payroll'));
+  const [stationeryOpen, setStationeryOpen] = React.useState(is('/Admin/stationery') || is('/Admin/invoices'));
+  const [frontdeskOpen,  setFrontdeskOpen]  = React.useState(is('/Admin/frontdesk') || is('/Admin/visitors'));
+  const [libraryOpen,    setLibraryOpen]    = React.useState(is('/Admin/library'));
 
-    const handleStationeryClick = () => {
-        setStationeryOpen(!stationeryOpen);
-    };
+  return (
+    <Box
+      component="nav"
+      aria-label="Admin navigation"
+      sx={{ display: 'flex', flexDirection: 'column', minHeight: '100%', py: 1, '& > *': { flexShrink: 0 } }}
+    >
+      {/* ── Logo ──────────────────────────────────────────────────────── */}
+      <Box sx={{ px: 3, py: 2, mb: 1 }}>
+        <Typography variant="h5" sx={{ fontWeight: 800, color: 'primary.main', lineHeight: 1 }}>
+          🏫 SchoolMS
+        </Typography>
+        <Typography variant="caption" sx={{ color: 'text.disabled', fontWeight: 500 }}>
+          Admin Portal
+        </Typography>
+      </Box>
 
-    const handleFrontdeskClick = () => {
-        setFrontdeskOpen(!frontdeskOpen);
-    };
+      <Divider sx={{ mb: 1 }} />
 
-    const handleLibraryClick = () => {
-        setLibraryOpen(!libraryOpen);
-    };
+      {/* ── Overview ──────────────────────────────────────────────────── */}
+      <NavItem
+        to="/"
+        icon={HomeIcon}
+        label="Dashboard"
+        selected={isExact('/') || isExact('/Admin/dashboard')}
+      />
 
-    return (
-        <>
-            <React.Fragment>
-                <ListItemButton component={Link} to="/" selected={location.pathname === "/" || location.pathname === "/Admin/dashboard"}>
-                    <ListItemIcon>
-                        <HomeIcon color={location.pathname === "/" || location.pathname === "/Admin/dashboard" ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Home" />
-                </ListItemButton>
-                <ListItemButton component={Link} to="/Admin/classes" selected={location.pathname.startsWith('/Admin/classes')}>
-                    <ListItemIcon>
-                        <ClassOutlinedIcon color={location.pathname.startsWith('/Admin/classes') ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Classes" />
-                </ListItemButton>
-                <ListItemButton component={Link} to="/Admin/subjects" selected={location.pathname.startsWith("/Admin/subjects")}>
-                    <ListItemIcon>
-                        <AssignmentIcon color={location.pathname.startsWith("/Admin/subjects") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Subjects" />
-                </ListItemButton>
-                <ListItemButton component={Link} to="/Admin/teachers" selected={location.pathname.startsWith("/Admin/teachers")}>
-                    <ListItemIcon>
-                        <SupervisorAccountOutlinedIcon color={location.pathname.startsWith("/Admin/teachers") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Teachers" />
-                </ListItemButton>
-                <ListItemButton component={Link} to="/Admin/students" selected={location.pathname.startsWith("/Admin/students")}>
-                    <ListItemIcon>
-                        <PersonOutlineIcon color={location.pathname.startsWith("/Admin/students") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Students" />
-                </ListItemButton>
-                <ListItemButton component={Link} to="/Admin/notices" selected={location.pathname.startsWith("/Admin/notices")}>
-                    <ListItemIcon>
-                        <AnnouncementOutlinedIcon color={location.pathname.startsWith("/Admin/notices") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Notices" />
-                </ListItemButton>
-                <ListItemButton component={Link} to="/Admin/complains" selected={location.pathname.startsWith("/Admin/complains")}>
-                    <ListItemIcon>
-                        <ReportIcon color={location.pathname.startsWith("/Admin/complains") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Complains" />
-                </ListItemButton>
-                <ListItemButton component={Link} to="/Admin/timetable" selected={location.pathname.startsWith("/Admin/timetable")}>
-                    <ListItemIcon>
-                        <AccessTimeIcon color={location.pathname.startsWith("/Admin/timetable") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Timetable" />
-                </ListItemButton>
-                <ListItemButton component={Link} to="/Admin/teacher-leave" selected={location.pathname.startsWith("/Admin/teacher-leave")}>
-                    <ListItemIcon>
-                        <EventBusyIcon color={location.pathname.startsWith("/Admin/teacher-leave") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Teacher Leave" />
-                </ListItemButton>
-                <ListItemButton onClick={handleFrontdeskClick} selected={location.pathname.startsWith("/Admin/frontdesk") || location.pathname.startsWith("/Admin/visitors")}>
-                    <ListItemIcon>
-                        <BadgeIcon color={(location.pathname.startsWith("/Admin/frontdesk") || location.pathname.startsWith("/Admin/visitors")) ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Frontdesk" />
-                    {frontdeskOpen ? <ExpandLess /> : <ExpandMore />}
-                </ListItemButton>
-                <Collapse in={frontdeskOpen} timeout="auto" unmountOnExit>
-                    <List component="div" disablePadding>
-                        <ListItemButton component={Link} to="/Admin/frontdesk" sx={{ pl: 4 }} selected={location.pathname.startsWith("/Admin/frontdesk")}>
-                            <ListItemIcon>
-                                <BadgeIcon color={location.pathname.startsWith("/Admin/frontdesk") ? 'primary' : 'inherit'} />
-                            </ListItemIcon>
-                            <ListItemText primary="Frontdesk Desk" />
-                        </ListItemButton>
-                        <ListItemButton component={Link} to="/Admin/visitors" sx={{ pl: 4 }} selected={location.pathname.startsWith("/Admin/visitors")}>
-                            <ListItemIcon>
-                                <GroupsIcon color={location.pathname.startsWith("/Admin/visitors") ? 'primary' : 'inherit'} />
-                            </ListItemIcon>
-                            <ListItemText primary="Visitors Log" />
-                        </ListItemButton>
-                    </List>
-                </Collapse>
-                <ListItemButton component={Link} to="/Admin/reports" selected={location.pathname.startsWith("/Admin/reports")}>
-                    <ListItemIcon>
-                        <InsightsIcon color={location.pathname.startsWith("/Admin/reports") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Reports" />
-                </ListItemButton>
-                <ListItemButton component={Link} to="/Admin/parents" selected={location.pathname.startsWith("/Admin/parents")}>
-                    <ListItemIcon>
-                        <FamilyRestroomIcon color={location.pathname.startsWith("/Admin/parents") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Parents" />
-                </ListItemButton>
-                <ListItemButton component={Link} to="/Admin/tracker" selected={location.pathname.startsWith("/Admin/tracker")}>
-                    <ListItemIcon>
-                        <LocationOnIcon color={location.pathname.startsWith("/Admin/tracker") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Student Tracker" />
-                </ListItemButton>
-                <ListItemButton component={Link} to="/Admin/ble-attendance" selected={location.pathname.startsWith("/Admin/ble-attendance")}>
-                    <ListItemIcon>
-                        <BluetoothIcon color={location.pathname.startsWith("/Admin/ble-attendance") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="BLE Attendance" />
-                </ListItemButton>
-                <ListItemButton onClick={handleStaffClick} selected={location.pathname.startsWith("/Admin/staff") || location.pathname.startsWith("/Admin/payroll")}>
-                    <ListItemIcon>
-                        <GroupsIcon color={(location.pathname.startsWith("/Admin/staff") || location.pathname.startsWith("/Admin/payroll")) ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Staff" />
-                    {staffOpen ? <ExpandLess /> : <ExpandMore />}
-                </ListItemButton>
-                <Collapse in={staffOpen} timeout="auto" unmountOnExit>
-                    <List component="div" disablePadding>
-                        <ListItemButton component={Link} to="/Admin/staff" sx={{ pl: 4 }} selected={location.pathname.startsWith("/Admin/staff") && !location.pathname.startsWith("/Admin/payroll")}>
-                            <ListItemIcon>
-                                <PersonAddAlt1Icon color={location.pathname.startsWith("/Admin/staff") && !location.pathname.startsWith("/Admin/payroll") ? 'primary' : 'inherit'} />
-                            </ListItemIcon>
-                            <ListItemText primary="Add Staff" />
-                        </ListItemButton>
-                        <ListItemButton component={Link} to="/Admin/payroll" sx={{ pl: 4 }} selected={location.pathname.startsWith("/Admin/payroll")}>
-                            <ListItemIcon>
-                                <AccountBalanceWalletIcon color={location.pathname.startsWith("/Admin/payroll") ? 'primary' : 'inherit'} />
-                            </ListItemIcon>
-                            <ListItemText primary="Payroll" />
-                        </ListItemButton>
-                    </List>
-                </Collapse>
-                <ListItemButton component={Link} to="/Admin/fees" selected={location.pathname.startsWith("/Admin/fees")}>
-                    <ListItemIcon>
-                        <AccountBalanceIcon color={location.pathname.startsWith("/Admin/fees") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Fees" />
-                </ListItemButton>
-                <ListItemButton onClick={handleStationeryClick} selected={location.pathname.startsWith("/Admin/stationery") || location.pathname.startsWith("/Admin/invoices")}>
-                    <ListItemIcon>
-                        <InventoryIcon color={(location.pathname.startsWith("/Admin/stationery") || location.pathname.startsWith("/Admin/invoices")) ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Stationery" />
-                    {stationeryOpen ? <ExpandLess /> : <ExpandMore />}
-                </ListItemButton>
-                <Collapse in={stationeryOpen} timeout="auto" unmountOnExit>
-                    <List component="div" disablePadding>
-                        <ListItemButton component={Link} to="/Admin/stationery" sx={{ pl: 4 }} selected={location.pathname.startsWith("/Admin/stationery") && !location.pathname.startsWith("/Admin/invoices")}>
-                            <ListItemIcon>
-                                <InventoryIcon color={location.pathname.startsWith("/Admin/stationery") && !location.pathname.startsWith("/Admin/invoices") ? 'primary' : 'inherit'} />
-                            </ListItemIcon>
-                            <ListItemText primary="Add Stationery" />
-                        </ListItemButton>
-                        <ListItemButton component={Link} to="/Admin/invoices" sx={{ pl: 4 }} selected={location.pathname.startsWith("/Admin/invoices")}>
-                            <ListItemIcon>
-                                <ReceiptIcon color={location.pathname.startsWith("/Admin/invoices") ? 'primary' : 'inherit'} />
-                            </ListItemIcon>
-                            <ListItemText primary="Sold" />
-                        </ListItemButton>
-                    </List>
-                </Collapse>
-                <ListItemButton onClick={handleLibraryClick} selected={location.pathname.startsWith("/Admin/library")}>
-                    <ListItemIcon>
-                        <MenuBookIcon color={location.pathname.startsWith("/Admin/library") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Library" />
-                    {libraryOpen ? <ExpandLess /> : <ExpandMore />}
-                </ListItemButton>
-                <Collapse in={libraryOpen} timeout="auto" unmountOnExit>
-                    <List component="div" disablePadding>
-                        <ListItemButton component={Link} to="/Admin/library/upload" sx={{ pl: 4 }} selected={location.pathname.startsWith("/Admin/library/upload")}>
-                            <ListItemIcon>
-                                <UploadFileIcon color={location.pathname.startsWith("/Admin/library/upload") ? 'primary' : 'inherit'} />
-                            </ListItemIcon>
-                            <ListItemText primary="Upload Books" />
-                        </ListItemButton>
-                        <ListItemButton component={Link} to="/Admin/library/books" sx={{ pl: 4 }} selected={location.pathname.startsWith("/Admin/library/books")}>
-                            <ListItemIcon>
-                                <MenuBookIcon color={location.pathname.startsWith("/Admin/library/books") ? 'primary' : 'inherit'} />
-                            </ListItemIcon>
-                            <ListItemText primary="Search Books" />
-                        </ListItemButton>
-                    </List>
-                </Collapse>
-            </React.Fragment>
-            <Divider sx={{ my: 1 }} />
-            <React.Fragment>
-                <ListSubheader component="div" inset>
-                    User
-                </ListSubheader>
-                <ListItemButton component={Link} to="/Admin/profile" selected={location.pathname.startsWith("/Admin/profile")}>
-                    <ListItemIcon>
-                        <AccountCircleOutlinedIcon color={location.pathname.startsWith("/Admin/profile") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Profile" />
-                </ListItemButton>
-                <ListItemButton component={Link} to="/logout" selected={location.pathname.startsWith("/logout")}>
-                    <ListItemIcon>
-                        <ExitToAppIcon color={location.pathname.startsWith("/logout") ? 'primary' : 'inherit'} />
-                    </ListItemIcon>
-                    <ListItemText primary="Logout" />
-                </ListItemButton>
-            </React.Fragment>
-        </>
-    )
-}
+      {/* ── People ────────────────────────────────────────────────────── */}
+      <SectionHeader label="People" />
+      <NavItem to="/Admin/students" icon={PersonOutlineIcon} label="Students"    selected={is('/Admin/students')} />
+      <NavItem to="/Admin/teachers" icon={SupervisorAccountOutlinedIcon} label="Teachers" selected={is('/Admin/teachers')} />
+      <NavItem to="/Admin/parents"  icon={FamilyRestroomIcon} label="Parents"    selected={is('/Admin/parents')} />
 
-export default SideBar
+      <NavGroup
+        icon={GroupsIcon}
+        label="Staff"
+        isOpen={staffOpen}
+        onToggle={() => setStaffOpen(!staffOpen)}
+        isActive={is('/Admin/staff') || is('/Admin/payroll')}
+      >
+        <NavItem to="/Admin/staff"    icon={PersonAddAlt1Icon}         label="All Staff"  selected={is('/Admin/staff') && !is('/Admin/payroll')} />
+        <NavItem to="/Admin/payroll"  icon={AccountBalanceWalletIcon}  label="Payroll"    selected={is('/Admin/payroll')} />
+      </NavGroup>
+
+      {/* ── Academics ─────────────────────────────────────────────────── */}
+      <SectionHeader label="Academics" />
+      <NavItem to="/Admin/classes"   icon={ClassOutlinedIcon} label="Classes"   selected={is('/Admin/classes')} />
+      <NavItem to="/Admin/subjects"  icon={AssignmentIcon}    label="Subjects"  selected={is('/Admin/subjects')} />
+      <NavItem to="/Admin/timetable" icon={AccessTimeIcon}    label="Timetable" selected={is('/Admin/timetable')} />
+
+      {/* ── Finance ───────────────────────────────────────────────────── */}
+      <SectionHeader label="Finance" />
+      <NavItem to="/Admin/fees"     icon={AccountBalanceIcon} label="Fees"     selected={is('/Admin/fees')} />
+      <NavItem to="/Admin/reports"  icon={InsightsIcon}       label="Reports"  selected={is('/Admin/reports')} />
+
+      {/* ── Operations ────────────────────────────────────────────────── */}
+      <SectionHeader label="Operations" />
+      <NavItem to="/Admin/ble-attendance" icon={BluetoothIcon}   label="BLE Attendance" selected={is('/Admin/ble-attendance')} />
+      <NavItem to="/Admin/tracker"        icon={LocationOnIcon}  label="GPS Tracker"    selected={is('/Admin/tracker')} />
+
+      <NavGroup
+        icon={BadgeIcon}
+        label="Front Desk"
+        isOpen={frontdeskOpen}
+        onToggle={() => setFrontdeskOpen(!frontdeskOpen)}
+        isActive={is('/Admin/frontdesk') || is('/Admin/visitors')}
+      >
+        <NavItem to="/Admin/frontdesk" icon={BadgeIcon}  label="Check-in Desk"  selected={is('/Admin/frontdesk')} />
+        <NavItem to="/Admin/visitors"  icon={GroupsIcon} label="Visitors Log"   selected={is('/Admin/visitors')} />
+      </NavGroup>
+
+      <NavGroup
+        icon={MenuBookIcon}
+        label="Library"
+        isOpen={libraryOpen}
+        onToggle={() => setLibraryOpen(!libraryOpen)}
+        isActive={is('/Admin/library')}
+      >
+        <NavItem to="/Admin/library/upload" icon={UploadFileIcon} label="Upload Books"  selected={is('/Admin/library/upload')} />
+        <NavItem to="/Admin/library/books"  icon={MenuBookIcon}   label="Search Books"  selected={is('/Admin/library/books')} />
+      </NavGroup>
+
+      <NavGroup
+        icon={InventoryIcon}
+        label="Stationery"
+        isOpen={stationeryOpen}
+        onToggle={() => setStationeryOpen(!stationeryOpen)}
+        isActive={is('/Admin/stationery') || is('/Admin/invoices')}
+      >
+        <NavItem to="/Admin/stationery" icon={InventoryIcon} label="Inventory"  selected={is('/Admin/stationery') && !is('/Admin/invoices')} />
+        <NavItem to="/Admin/invoices"   icon={ReceiptIcon}   label="Invoices"   selected={is('/Admin/invoices')} />
+      </NavGroup>
+
+      {/* ── Communicate ───────────────────────────────────────────────── */}
+      <SectionHeader label="Communicate" />
+      <NavItem to="/Admin/notices"      icon={AnnouncementOutlinedIcon} label="Notices"       selected={is('/Admin/notices')} />
+      <NavItem to="/Admin/complains"    icon={ReportIcon}               label="Complaints"    selected={is('/Admin/complains')} />
+      <NavItem to="/Admin/teacher-leave" icon={EventBusyIcon}           label="Teacher Leave" selected={is('/Admin/teacher-leave')} />
+
+      {/* ── Account (bottom) ──────────────────────────────────────────── */}
+      <Box sx={{ mt: 'auto' }}>
+        <Divider sx={{ mb: 1 }} />
+        <NavItem to="/Admin/profile" icon={AccountCircleOutlinedIcon} label="Profile"  selected={is('/Admin/profile')} />
+        <NavItem to="/logout"         icon={ExitToAppIcon}             label="Sign Out" selected={is('/logout')} />
+      </Box>
+    </Box>
+  );
+};
+
+export default SideBar;
