@@ -136,6 +136,8 @@ const uploadBleTelemetry = async (req, res) => {
         // Generate a 32-bit unsigned integer receipt ID (uint32)
         const receiptId = (Date.now() & 0xFFFFFFFF) >>> 0;
 
+        console.log(`[BLE TELEMETRY RECEIVE] IMEI: ${imei} | Seq: ${sequence} | Bat: ${battery}% (${batteryMv}mV) | Lat: ${latitude || 0} | Lng: ${longitude || 0} | ReceiptId: ${receiptId} (0x${receiptId.toString(16).toUpperCase()})`);
+
         return res.status(200).json({
             status: 1,
             message: "Beacon telemetry recorded successfully",

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter/services.dart';
 import 'api_service.dart';
 
 enum BleLogType { scan, upload, ack, error, info, warning }
@@ -186,23 +187,42 @@ class BleGatewayService extends ChangeNotifier {
   }
 
   void _processScanResult(ScanResult result) {
-    // Check manufacturer data for company ID 0xFFFF
     final manufacturerData = result.advertisementData.manufacturerData;
+    
+    // 1. Check manufacturer data for Company ID 0xFFFF
     if (manufacturerData.containsKey(0xFFFF)) {
       final payload = manufacturerData[0xFFFF];
       if (payload != null && payload.length >= 17) {
+        parseAndProcessBeacon(Uint8List.fromList(payload));
+        return;
+      }
+    }
+
+    // 2. Fallback: Search all manufacturer data values for BCK magic
+    for (var payload in manufacturerData.values) {
+      if (payload.length >= 17) {
         parseAndProcessBeacon(Uint8List.fromList(payload));
       }
     }
   }
 
-  void parseAndProcessBeacon(Uint8List bytes) {
-    if (bytes.length < 17) return;
+  void parseAndProcessBeacon(Uint8List rawInputBytes) {
+    if (rawInputBytes.length < 17) return;
 
-    // Check magic ASCII "BCK" (0x42, 0x43, 0x4B)
-    if (bytes[0] != 0x42 || bytes[1] != 0x43 || bytes[2] != 0x4B) {
+    // Search for ASCII magic "BCK" (0x42, 0x43, 0x4B) anywhere in the raw advertisement frame
+    int bckOffset = -1;
+    for (int i = 0; i <= rawInputBytes.length - 17; i++) {
+      if (rawInputBytes[i] == 0x42 && rawInputBytes[i + 1] == 0x43 && rawInputBytes[i + 2] == 0x4B) {
+        bckOffset = i;
+        break;
+      }
+    }
+
+    if (bckOffset == -1) {
       return; // Not a BeaconACK packet
     }
+
+    final bytes = rawInputBytes.sublist(bckOffset);
 
     final version = bytes[3];
     if (version != 0x01) {
@@ -213,7 +233,7 @@ class BleGatewayService extends ChangeNotifier {
       return;
     }
 
-    // Sequence uint16 LE
+    // Sequence uint16 LE (bytes 4..5)
     final sequence = bytes[4] | (bytes[5] << 8);
 
     // IMEI uint64 LE (bytes 6..13)
@@ -231,13 +251,13 @@ class BleGatewayService extends ChangeNotifier {
 
     final rawHex = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join('').toUpperCase();
 
-    // Deduplicate packets received within 1 second for same IMEI and sequence
+    // Deduplicate rapid scan bursts (within 1.5s) based ONLY on IMEI
     final now = DateTime.now();
-    final lastTime = _lastProcessedImei['${imeiStr}_$sequence'];
+    final lastTime = _lastProcessedImei[imeiStr];
     if (lastTime != null && now.difference(lastTime).inMilliseconds < 1500) {
       return;
     }
-    _lastProcessedImei['${imeiStr}_$sequence'] = now;
+    _lastProcessedImei[imeiStr] = now;
 
     _totalBeaconsDetected++;
 
@@ -262,6 +282,9 @@ class BleGatewayService extends ChangeNotifier {
     );
   }
 
+  final List<Map<String, dynamic>> _offlineQueue = [];
+  int get offlineQueueCount => _offlineQueue.length;
+
   Future<void> _uploadBeaconAndAdvertiseAck({
     required String imei,
     required int imeiUint64,
@@ -270,6 +293,11 @@ class BleGatewayService extends ChangeNotifier {
     required int batteryMv,
     required Uint8List rawBytes,
   }) async {
+    // First try flushing any pending offline telemetry queue if internet is restored
+    if (_offlineQueue.isNotEmpty) {
+      _flushOfflineQueue();
+    }
+
     try {
       addLog(
         type: BleLogType.info,
@@ -283,7 +311,7 @@ class BleGatewayService extends ChangeNotifier {
         'sequence': sequence,
         'battery': battery,
         'batteryMv': batteryMv,
-      });
+      }).timeout(const Duration(seconds: 4));
 
       final receiptId = (response['receiptId'] as int?) ?? ((DateTime.now().millisecondsSinceEpoch & 0xFFFFFFFF) >>> 0);
 
@@ -307,23 +335,70 @@ class BleGatewayService extends ChangeNotifier {
 
       final ackHex = ackPayload.map((b) => b.toRadixString(16).padLeft(2, '0')).join('').toUpperCase();
 
+      // Trigger native Android BluetoothLeAdvertiser matching nRF Connect settings
+      try {
+        await const MethodChannel('com.example.mobile/ble_advertiser').invokeMethod('startAdvertising', {
+          'manufacturerDataHex': ackHex,
+          'durationMs': 2000,
+          'deviceName': 'BCK',
+        });
+      } catch (e) {
+        debugPrint('BLE native advertiser warning/simulation mode: $e');
+      }
+
       _totalAcksSent++;
 
       addLog(
         type: BleLogType.ack,
-        message: 'Broadcasting BLE ACK advertisement (BeaconACK-ACK) for 4s...',
+        message: 'Broadcasting BLE ACK advertisement (BeaconACK-ACK) for 2s...',
         imei: imei,
         sequence: sequence,
         receiptId: receiptId,
         rawPayloadHex: ackHex,
       );
     } catch (e) {
+      // Network failure or offline -> Queue locally and withhold ACK so tag retries
+      _offlineQueue.add({
+        'imei': imei,
+        'sequence': sequence,
+        'battery': battery,
+        'batteryMv': batteryMv,
+        'timestamp': DateTime.now(),
+      });
+
       addLog(
-        type: BleLogType.error,
-        message: 'Failed to upload beacon telemetry: $e',
+        type: BleLogType.warning,
+        message: 'Network offline/unreachable: $e. Queued beacon (Queue size: ${_offlineQueue.length}). ACK withheld so tag retries.',
         imei: imei,
         sequence: sequence,
       );
+    }
+  }
+
+  Future<void> _flushOfflineQueue() async {
+    if (_offlineQueue.isEmpty) return;
+    final copy = List<Map<String, dynamic>>.from(_offlineQueue);
+    _offlineQueue.clear();
+
+    for (var item in copy) {
+      try {
+        await ApiService().uploadBleTelemetry({
+          'imei': item['imei'],
+          'sequence': item['sequence'],
+          'battery': item['battery'],
+          'batteryMv': item['batteryMv'],
+        });
+        addLog(
+          type: BleLogType.upload,
+          message: 'Flushed offline queued beacon to server for IMEI ${item['imei']}',
+          imei: item['imei'],
+          sequence: item['sequence'],
+        );
+      } catch (e) {
+        // Re-queue if still offline
+        _offlineQueue.add(item);
+        break;
+      }
     }
   }
 
