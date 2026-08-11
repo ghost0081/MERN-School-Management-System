@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  school-backend:
+    build: .
+    container_name: school-backend
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "${PORT:-5000}:5000"
+      - "5023:5023"
+      - "5023:5023/udp"
+    environment:
+      - PORT=${PORT:-5000}
+      - MONGO_URL=${MONGO_URL}

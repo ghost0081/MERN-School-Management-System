@@ -224,4 +224,22 @@ class ApiService {
       throw Exception(e.toString());
     }
   }
+
+  Future<Map<String, dynamic>> uploadBleTelemetry(Map<String, dynamic> payload) async {
+    try {
+      final response = await http.post(
+        Uri.parse(Config.bleTelemetry),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(payload),
+      );
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return Map<String, dynamic>.from(data);
+      } else {
+        throw Exception(data['error'] ?? data['message'] ?? 'Failed to upload BLE telemetry');
+      }
+    } catch (e) {
+      throw Exception(e.toString().replaceAll(RegExp(r'Exception:\s*'), ''));
+    }
+  }
 }

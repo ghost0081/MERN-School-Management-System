@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 class Config {
   static String get baseUrl {
     return 'http://200.141.9.19:5000';
@@ -17,6 +15,7 @@ class Config {
   static String complainList(String schoolId) => '$baseUrl/ComplainList/$schoolId';
   static String get complainCreate => '$baseUrl/ComplainCreate';
   static String studentFeeHistory(String id) => '$baseUrl/Fees/Student/$id';
+  static String get bleTelemetry => '$baseUrl/api/tracker/ble-telemetry';
 
   // Teacher Endpoints
   static String subjectDetails(String id) => '$baseUrl/Subject/$id';

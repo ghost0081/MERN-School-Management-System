@@ -13,6 +13,8 @@ import 'teacher_leave.dart';
 import 'teacher_timetable.dart';
 import 'teacher_profile.dart';
 
+import '../ble/ble_logs_screen.dart';
+
 /*
  * TeacherDashboard — Premium UI Rewrite
  * 
@@ -36,6 +38,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
     const TeacherLeave(),
     const TeacherTimetable(),
     const TeacherProfile(),
+    const BleLogsScreen(),
   ];
 
   final List<String> _titles = [
@@ -46,6 +49,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
     'Request Leave',
     'Timetable',
     'My Profile',
+    'BLE Gateway & Logs',
   ];
 
   void _onItemTapped(int index) {
@@ -172,6 +176,7 @@ class _TeacherDashboardState extends State<TeacherDashboard> {
                   ),
                   
                   _buildDrawerItem(6, 'Profile', Icons.person_rounded),
+                  _buildDrawerItem(7, 'BLE Gateway & Logs', Icons.bluetooth_audio_rounded),
                 ],
               ),
             ),

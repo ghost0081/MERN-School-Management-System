@@ -13,6 +13,8 @@ import 'student_timetable.dart';
 import 'student_complain.dart';
 import 'student_profile.dart';
 
+import '../ble/ble_logs_screen.dart';
+
 /*
  * StudentDashboard — Premium UI Rewrite
  * 
@@ -36,6 +38,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
     const StudentTimetable(),
     const StudentComplain(),
     const StudentProfile(),
+    const BleLogsScreen(),
   ];
 
   final List<String> _titles = [
@@ -46,6 +49,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
     'Timetable',
     'Complaints',
     'My Profile',
+    'BLE Gateway & Logs',
   ];
 
   void _onItemTapped(int index) {
@@ -152,6 +156,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
                   ),
                   
                   _buildDrawerItem(6, 'Profile', Icons.person_rounded),
+                  _buildDrawerItem(7, 'BLE Gateway & Logs', Icons.bluetooth_audio_rounded),
                 ],
               ),
             ),

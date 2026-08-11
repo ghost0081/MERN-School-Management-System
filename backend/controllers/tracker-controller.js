@@ -87,9 +87,72 @@ const updateGeofence = async (req, res) => {
     }
 };
 
+// Upload BLE Telemetry from Mobile Android Gateway (BeaconACK Protocol)
+const uploadBleTelemetry = async (req, res) => {
+    try {
+        const { imei, sequence, battery, batteryMv, latitude, longitude, speed } = req.body;
+
+        if (!imei) {
+            return res.status(400).json({ error: "IMEI is required" });
+        }
+
+        const now = new Date();
+        const updatePayload = {
+            imei: String(imei),
+            battery: Number(battery) || 0,
+            batteryMv: Number(batteryMv) || 0,
+            sequence: Number(sequence) || 0,
+            deviceType: 'BLE_BEACON',
+            status: 'Online',
+            last_updated: now
+        };
+
+        const lat = Number(latitude) || 0;
+        const lng = Number(longitude) || 0;
+
+        if (lat !== 0 && lng !== 0) {
+            updatePayload.latitude = lat;
+            updatePayload.longitude = lng;
+            if (speed !== undefined) updatePayload.speed = Number(speed);
+        }
+
+        const mongoUpdate = { $set: updatePayload };
+
+        if (lat !== 0 && lng !== 0) {
+            mongoUpdate.$push = {
+                path_history: {
+                    $each: [{ lat, lng, timestamp: now }],
+                    $slice: -500 // Keep last 500 coordinates
+                }
+            };
+        }
+
+        await TrackerData.findOneAndUpdate(
+            { imei: String(imei) },
+            mongoUpdate,
+            { upsert: true, new: true }
+        );
+
+        // Generate a 32-bit unsigned integer receipt ID (uint32)
+        const receiptId = (Date.now() & 0xFFFFFFFF) >>> 0;
+
+        return res.status(200).json({
+            status: 1,
+            message: "Beacon telemetry recorded successfully",
+            receiptId,
+            imei: String(imei),
+            sequence: Number(sequence) || 0
+        });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
+    }
+};
+
 module.exports = {
     getDeviceData,
     getActiveDevices,
-    updateGeofence
+    updateGeofence,
+    uploadBleTelemetry
 };
+
 

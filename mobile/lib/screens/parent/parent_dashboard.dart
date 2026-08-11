@@ -12,6 +12,8 @@ import 'parent_fees.dart';
 import 'parent_tracking.dart';
 import 'parent_shop.dart';
 
+import '../ble/ble_logs_screen.dart';
+
 /*
  * ParentDashboard — Premium UI Rewrite
  * 
@@ -34,6 +36,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
     const ParentFees(),
     const ParentTracking(),
     const ParentShop(),
+    const BleLogsScreen(),
   ];
 
   final List<String> _titles = [
@@ -43,6 +46,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
     'Fee Management',
     'Live Tracking',
     'School Shop',
+    'BLE Gateway & Logs',
   ];
 
   void _onItemTapped(int index) {
@@ -148,6 +152,7 @@ class _ParentDashboardState extends State<ParentDashboard> {
                   _buildDrawerItem(3, 'Fee Management', Icons.payments_rounded),
                   _buildDrawerItem(4, 'Live Tracking', Icons.location_on_rounded),
                   _buildDrawerItem(5, 'School Shop', Icons.storefront_rounded),
+                  _buildDrawerItem(6, 'BLE Gateway & Logs', Icons.bluetooth_audio_rounded),
                 ],
               ),
             ),

@@ -26,6 +26,18 @@ const trackerSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    batteryMv: {
+        type: Number,
+        default: 0
+    },
+    sequence: {
+        type: Number,
+        default: 0
+    },
+    deviceType: {
+        type: String,
+        default: "GT06" // "GT06" or "BLE_BEACON"
+    },
     status: {
         type: String,
         default: "Offline"
