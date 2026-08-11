@@ -157,7 +157,20 @@ class ApiService {
     return response as List<dynamic>;
   }
 
+  Future<List<dynamic>> getNotices(String schoolId) async {
+    if (schoolId.isEmpty) return [];
+    final response = await _getReq(Config.noticeList(schoolId));
+    if (response is Map && response.containsKey('message')) return [];
+    return response as List<dynamic>;
+  }
+
   // --- Tracker API Methods ---
+  Future<List<dynamic>> getActiveDevices() async {
+    final response = await _getReq(Config.activeDevices);
+    if (response is List) return response;
+    return [];
+  }
+
   Future<Map<String, dynamic>> getDeviceData(String deviceId) async {
     if (deviceId.isEmpty) throw Exception('Invalid device ID');
     final response = await _getReq('${Config.baseUrl}/api/admin/$deviceId');

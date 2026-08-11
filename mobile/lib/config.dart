@@ -15,6 +15,8 @@ class Config {
   static String complainList(String schoolId) => '$baseUrl/ComplainList/$schoolId';
   static String get complainCreate => '$baseUrl/ComplainCreate';
   static String studentFeeHistory(String id) => '$baseUrl/Fees/Student/$id';
+  static String noticeList(String schoolId) => '$baseUrl/NoticeList/$schoolId';
+  static String get activeDevices => '$baseUrl/api/tracker/devices';
   static String get bleTelemetry => '$baseUrl/api/tracker/ble-telemetry';
 
   // Teacher Endpoints

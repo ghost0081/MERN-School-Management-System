@@ -28,7 +28,8 @@ class _AdminTrackerState extends State<AdminTracker> {
 
   Future<void> _fetchActiveDevices() async {
     try {
-      _activeDevices = await ApiService().getActiveDevices();
+      final rawDevices = await ApiService().getActiveDevices();
+      _activeDevices = rawDevices.map((e) => e.toString()).toList();
       if (_activeDevices.isNotEmpty) {
         _selectedDevice = _activeDevices.first;
         _fetchDeviceTelemetry(_selectedDevice!);
