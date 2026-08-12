@@ -38,6 +38,13 @@ const studentSchema = new mongoose.Schema({
         name: { type: String, default: "Safe Zone" },
         enabled: { type: Boolean, default: false }
     },
+    geofences: [{
+        name: { type: String, default: "Safe Zone" },
+        lat: { type: Number, required: true },
+        lng: { type: Number, required: true },
+        radius: { type: Number, default: 10 },
+        enabled: { type: Boolean, default: true }
+    }],
     examResult: [
         {
             subName: {

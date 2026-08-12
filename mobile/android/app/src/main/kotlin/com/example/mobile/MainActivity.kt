@@ -7,6 +7,8 @@ import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import android.bluetooth.le.BluetoothLeAdvertiser
 import android.content.Context
+import android.location.Location
+import android.location.LocationManager
 import android.os.Handler
 import android.os.Looper
 import io.flutter.embedding.android.FlutterActivity
@@ -42,10 +44,39 @@ class MainActivity: FlutterActivity() {
             } else if (call.method == "stopAdvertising") {
                 stopBleAdvertisement()
                 result.success(true)
+            } else if (call.method == "getPhoneLocation") {
+                val locMap = getPhoneLocation()
+                result.success(locMap)
             } else {
                 result.notImplemented()
             }
         }
+    }
+
+    private fun getPhoneLocation(): Map<String, Any>? {
+        val locationManager = getSystemService(Context.LOCATION_SERVICE) as? LocationManager ?: return null
+        try {
+            var location: Location? = null
+            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+            }
+            if (location == null && locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+            }
+            if (location != null) {
+                return mapOf(
+                    "latitude" to location.latitude,
+                    "longitude" to location.longitude,
+                    "speed" to location.speed.toDouble(),
+                    "accuracy" to location.accuracy.toDouble()
+                )
+            }
+        } catch (e: SecurityException) {
+            // Location permission missing
+        } catch (e: Exception) {
+            // Ignore error
+        }
+        return null
     }
 
     private fun startBleAdvertisement(manufacturerBytes: ByteArray, deviceName: String, durationMs: Long) {

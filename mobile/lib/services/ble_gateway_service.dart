@@ -298,20 +298,43 @@ class BleGatewayService extends ChangeNotifier {
       _flushOfflineQueue();
     }
 
+    double? lat;
+    double? lng;
+    double? speed;
+
+    try {
+      final locRes = await const MethodChannel('com.example.mobile/ble_advertiser').invokeMethod('getPhoneLocation');
+      if (locRes is Map) {
+        lat = (locRes['latitude'] as num?)?.toDouble();
+        lng = (locRes['longitude'] as num?)?.toDouble();
+        speed = (locRes['speed'] as num?)?.toDouble();
+      }
+    } catch (e) {
+      debugPrint('Location fetch warning: $e');
+    }
+
     try {
       addLog(
         type: BleLogType.info,
-        message: 'Posting beacon telemetry to server for IMEI $imei...',
+        message: lat != null ? 'Captured Phone GPS: Lat ${lat.toStringAsFixed(6)}, Lng ${lng?.toStringAsFixed(6)}. Posting telemetry...' : 'Posting beacon telemetry to server for IMEI $imei...',
         imei: imei,
         sequence: sequence,
       );
 
-      final response = await ApiService().uploadBleTelemetry({
+      final payload = <String, dynamic>{
         'imei': imei,
         'sequence': sequence,
         'battery': battery,
         'batteryMv': batteryMv,
-      }).timeout(const Duration(seconds: 4));
+      };
+
+      if (lat != null && lng != null) {
+        payload['latitude'] = lat;
+        payload['longitude'] = lng;
+        if (speed != null) payload['speed'] = speed;
+      }
+
+      final response = await ApiService().uploadBleTelemetry(payload).timeout(const Duration(seconds: 4));
 
       final receiptId = (response['receiptId'] as int?) ?? ((DateTime.now().millisecondsSinceEpoch & 0xFFFFFFFF) >>> 0);
 
@@ -324,6 +347,18 @@ class BleGatewayService extends ChangeNotifier {
         batteryMv: batteryMv,
         receiptId: receiptId,
       );
+
+      if (response['geofenceAlert'] != null) {
+        final gAlert = response['geofenceAlert'];
+        if (gAlert['isInside'] == true) {
+          addLog(
+            type: BleLogType.warning,
+            message: '${gAlert['message']}',
+            imei: imei,
+            sequence: sequence,
+          );
+        }
+      }
 
       // Build 19-byte ACK Payload (BAK)
       final ackPayload = _buildAckPayload(

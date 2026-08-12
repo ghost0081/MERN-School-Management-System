@@ -19,7 +19,7 @@ import sys
 import argparse
 
 SERVER_URL = "http://200.141.9.19:5000"
-DEFAULT_IMEI = "123456789012354"
+DEFAULT_IMEI = "123456789012345"
 
 def build_bak_ack_hex(sequence, imei_str, status, receipt_id):
     """
