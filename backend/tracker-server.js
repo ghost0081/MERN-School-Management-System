@@ -171,7 +171,7 @@ function startTrackerServer() {
                     // Upsert default tracker state if not exists
                     await TrackerData.findOneAndUpdate(
                         { imei: deviceImei },
-                        { $setOnInsert: { imei: deviceImei, status: 'Online' } },
+                        { $set: { imei: deviceImei, status: 'Online', deviceType: 'GT06' } },
                         { upsert: true }
                     );
                 }
@@ -184,7 +184,7 @@ function startTrackerServer() {
                         
                         await TrackerData.findOneAndUpdate(
                             { imei: deviceImei },
-                            { last_updated: new Date(), status: 'Online', battery: parsed.battery }
+                            { last_updated: new Date(), status: 'Online', battery: parsed.battery, deviceType: 'GT06' }
                         );
                     }
                 }
@@ -196,6 +196,7 @@ function startTrackerServer() {
                     const parsed = parseLocationPacket(data);
 
                     const updatePayload = {
+                        deviceType: 'GT06',
                         speed: parsed.speed, 
                         course: parsed.course,
                         last_updated: parsed.gpsTimestamp,
@@ -225,6 +226,20 @@ function startTrackerServer() {
                     );
                     
                     console.log(`Tracker Location Updated: IMEI ${deviceImei} - Lat: ${parsed.latitude}, Lon: ${parsed.longitude}, ValidFix: ${parsed.isGpsValid}`);
+                }
+
+                // Peripheral Packet (0x90) - Arcmos Electronics Spec
+                else if (protocolNumber === 0x90) {
+                    if (deviceImei) {
+                        const serialNumber = data.slice(data.length - 6, data.length - 4);
+                        const response = Buffer.from([0x78, 0x78, 0x05, 0x90, serialNumber[0], serialNumber[1], 0x00, 0x00, 0x0D, 0x0A]);
+                        const crcBuf = Buffer.from([0x05, 0x90, serialNumber[0], serialNumber[1]]);
+                        const crc = getCrc16(crcBuf);
+                        response.writeUInt16BE(crc, 6);
+                        
+                        socket.write(response);
+                        console.log(`Arcmos Peripheral Alert Received: IMEI ${deviceImei}`);
+                    }
                 }
             } catch (err) {
                 console.error("GT06 Parsing Error:", err);

@@ -61,14 +61,10 @@ const getDeviceData = async (req, res) => {
     }
 };
 
-// Retrieve all active devices stored in memory
+// Retrieve all active and registered devices
 const getActiveDevices = async (req, res) => {
     try {
-        const now = new Date();
-        const twoMinutesAgo = new Date(now.getTime() - 2 * 60 * 1000);
-        const devices = await TrackerData.find({
-            last_updated: { $gte: twoMinutesAgo }
-        }, 'imei status latitude longitude last_updated').lean();
+        const devices = await TrackerData.find({}, 'imei status latitude longitude last_updated').sort({ last_updated: -1 }).lean();
         const deviceIds = devices.map(d => d.imei);
         return res.status(200).json(deviceIds);
     } catch (err) {
